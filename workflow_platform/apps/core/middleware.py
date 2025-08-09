@@ -353,3 +353,24 @@ class MaintenanceModeMiddleware(MiddlewareMixin):
                     }, status=503)
 
         return None
+
+
+class ErrorHandlingMiddleware:
+    """Middleware to handle API errors gracefully"""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        try:
+            response = self.get_response(request)
+            return response
+        except Exception as e:
+            if request.path.startswith('/api/'):
+                logger.error(f"API Error: {request.path} - {str(e)}")
+                return JsonResponse({
+                    'error': 'Internal server error',
+                    'message': 'An unexpected error occurred',
+                    'path': request.path
+                }, status=500)
+            raise

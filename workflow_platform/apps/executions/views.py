@@ -10,6 +10,7 @@ from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+from django.core.exceptions import ValidationError
 
 from .models import (
     ExecutionQueue, ExecutionHistory, ExecutionAlert,
@@ -23,6 +24,9 @@ from .serializers import (
 from apps.core.permissions import OrganizationPermission
 from apps.core.pagination import CustomPageNumberPagination
 from apps.workflows.models import Workflow
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ExecutionQueueViewSet(viewsets.ModelViewSet):
@@ -493,3 +497,111 @@ def execution_status(request, execution_id):
                 {'error': 'Execution not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, OrganizationPermission])
+def execution_stats(request):
+    """Get execution statistics"""
+    try:
+        # Get user's organization
+        membership = request.user.organization_memberships.filter(status='active').first()
+        if not membership:
+            return Response({'error': 'No organization membership'}, status=400)
+
+        organization = membership.organization
+
+        # Calculate stats
+        from datetime import timedelta
+        from django.utils import timezone
+
+        now = timezone.now()
+        last_30_days = now - timedelta(days=30)
+
+        # Get execution counts
+        total_executions = ExecutionHistory.objects.filter(
+            organization=organization
+        ).count()
+
+        recent_executions = ExecutionHistory.objects.filter(
+            organization=organization,
+            started_at__gte=last_30_days
+        )
+
+        stats = {
+            'total_executions': total_executions,
+            'executions_last_30_days': recent_executions.count(),
+            'successful_executions': recent_executions.filter(status='success').count(),
+            'failed_executions': recent_executions.filter(status='failed').count(),
+            'average_execution_time': 0,  # Calculate if needed
+            'active_workflows': Workflow.objects.filter(
+                organization=organization,
+                status='active'
+            ).count()
+        }
+
+        return Response(stats)
+
+    except Exception as e:
+        logger.error(f"Error getting execution stats: {e}")
+        return Response({'error': str(e)}, status=500)
+
+
+class ExecutionScheduleViewSet(viewsets.ModelViewSet):
+    """Execution schedule management"""
+
+    serializer_class = ExecutionScheduleSerializer
+    permission_classes = [IsAuthenticated, OrganizationPermission]
+
+    def get_queryset(self):
+        """Get schedules with proper error handling"""
+        # Handle schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return ExecutionSchedule.objects.none()
+
+        try:
+            if not self.request.user.is_authenticated:
+                return ExecutionSchedule.objects.none()
+
+            membership = self.request.user.organization_memberships.filter(status='active').first()
+            if membership:
+                return ExecutionSchedule.objects.filter(
+                    workflow__organization=membership.organization
+                ).select_related('workflow', 'created_by')
+
+            return ExecutionSchedule.objects.none()
+        except Exception as e:
+            logger.error(f"Error in ExecutionScheduleViewSet.get_queryset: {e}")
+            return ExecutionSchedule.objects.none()
+
+    def perform_create(self, serializer):
+        """Create schedule with proper validation"""
+        try:
+            # Get workflow from the data
+            workflow_id = self.request.data.get('workflow')
+            if workflow_id:
+                from apps.workflows.models import Workflow
+
+                membership = self.request.user.organization_memberships.filter(status='active').first()
+                if membership:
+                    workflow = Workflow.objects.filter(
+                        id=workflow_id,
+                        organization=membership.organization
+                    ).first()
+
+                    if workflow:
+                        serializer.save(
+                            workflow=workflow,
+                            created_by=self.request.user
+                        )
+                    else:
+                        raise ValidationError("Workflow not found or access denied")
+                else:
+                    raise ValidationError("User must be a member of an organization")
+            else:
+                raise ValidationError("Workflow is required")
+
+        except Exception as e:
+            logger.error(f"Error creating execution schedule: {e}")
+            raise ValidationError(f"Failed to create schedule: {str(e)}")
+

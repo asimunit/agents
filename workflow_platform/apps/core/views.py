@@ -15,16 +15,74 @@ import json
 from .utils import HealthChecker
 
 
+# Create or replace: apps/core/views.py health_check function
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@cache_page(60)  # Cache for 1 minute
 def health_check(request):
     """
-    Basic health check endpoint
-    Returns 200 if the service is healthy
+    Simple health check endpoint that always returns 200
+    """
+    return Response({
+        'status': 'healthy',
+        'timestamp': timezone.now().isoformat(),
+        'service': 'workflow-platform',
+        'version': '1.0.0'
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def detailed_health_check(request):
+    """
+    Detailed health check with service dependencies
     """
     try:
-        health_status = HealthChecker.get_system_health()
+        health_status = {
+            'status': 'healthy',
+            'timestamp': timezone.now().isoformat(),
+            'checks': {}
+        }
+
+        # Check database
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                health_status['checks']['database'] = {'status': 'healthy', 'message': 'Connected'}
+        except Exception as e:
+            health_status['checks']['database'] = {'status': 'unhealthy', 'message': str(e)}
+            health_status['status'] = 'unhealthy'
+
+        # Check cache/Redis (optional)
+        try:
+            from django.core.cache import cache
+            cache.set('health_check', 'ok', timeout=10)
+            result = cache.get('health_check')
+            if result == 'ok':
+                health_status['checks']['cache'] = {'status': 'healthy', 'message': 'Connected'}
+            else:
+                health_status['checks']['cache'] = {'status': 'unhealthy', 'message': 'Cache test failed'}
+        except Exception as e:
+            health_status['checks']['cache'] = {'status': 'unhealthy', 'message': str(e)}
+            # Don't mark overall status as unhealthy for cache issues
+
+        # Check Celery (optional)
+        try:
+            from celery import current_app
+            from celery.exceptions import TimeoutError as CeleryTimeoutError
+
+            # Quick ping to see if workers are available
+            inspect = current_app.control.inspect()
+            stats = inspect.stats()
+
+            if stats:
+                health_status['checks']['celery'] = {'status': 'healthy', 'message': f'{len(stats)} workers available'}
+            else:
+                health_status['checks']['celery'] = {'status': 'unhealthy', 'message': 'No workers available'}
+        except Exception as e:
+            health_status['checks']['celery'] = {'status': 'unhealthy', 'message': str(e)}
+            # Don't mark overall status as unhealthy for Celery issues
 
         # Determine overall status code
         if health_status['status'] == 'healthy':
@@ -180,3 +238,37 @@ def webhook_test(request):
         'headers': dict(request.headers),
         'data': request.data,
     })
+
+
+# Add this to apps/core/views.py (replace the existing health_check function)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    Simple health check endpoint for development
+    Returns 200 if the basic service is healthy
+    """
+    try:
+        # Just check database connectivity for now
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+
+        # Basic health response
+        health_status = {
+            'status': 'healthy',
+            'timestamp': timezone.now().isoformat(),
+            'database': 'connected',
+            'django': 'running',
+            'environment': getattr(settings, 'DEBUG', False) and 'development' or 'production'
+        }
+
+        return Response(health_status, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)

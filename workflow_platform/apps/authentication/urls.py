@@ -18,6 +18,8 @@ from .views import (
 )
 
 urlpatterns = [
+path('refresh/', TokenRefreshView.as_view(), name='token_refresh_alt'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Authentication endpoints
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),

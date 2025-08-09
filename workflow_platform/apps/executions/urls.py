@@ -10,7 +10,8 @@ from .views import (
     ExecutionResourceViewSet,
     ExecutionScheduleViewSet,
     trigger_workflow,
-    execution_status
+    execution_status,
+    execution_stats
 )
 
 # Create router and register viewsets
@@ -28,6 +29,7 @@ urlpatterns = [
     # Custom endpoints
     path('trigger/<uuid:workflow_id>/', trigger_workflow, name='trigger_workflow'),
     path('status/<str:execution_id>/', execution_status, name='execution_status'),
+    path('stats/', execution_stats, name='execution_stats'),
 ]
 
 app_name = 'executions'

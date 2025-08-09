@@ -1,0 +1,595 @@
+{
+  "test_summary": {
+    "total_tests": 72,
+    "successful_tests": 54,
+    "failed_tests": 18,
+    "average_response_time": 0.06542397538820903
+  },
+  "test_results": [
+    {
+      "endpoint": "/health/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.010359764099121094,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/auth/login/",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.26425957679748535,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/auth/register/",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.052223920822143555,
+      "success": false,
+      "error_message": "HTTP 400: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/auth/token/refresh/",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.04803895950317383,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/auth/profile/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05284595489501953,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/auth/logout/",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.04750633239746094,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/organizations/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.06722044944763184,
+      "success": false,
+      "error_message": "HTTP 500: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/organizations/",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.06143808364868164,
+      "success": false,
+      "error_message": "HTTP 500: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0626993179321289,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "POST",
+      "status_code": 201,
+      "response_time": 0.07544493675231934,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.08061861991882324,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/0fe91105-0db3-4dca-85d0-aaac885f364e/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06104898452758789,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/0fe91105-0db3-4dca-85d0-aaac885f364e/validate/",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 0.045964717864990234,
+      "success": false,
+      "error_message": "HTTP 404: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/nodes/categories/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.045455217361450195,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/credentials/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05610489845275879,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/credentials/",
+      "method": "POST",
+      "status_code": 201,
+      "response_time": 0.07078099250793457,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/credentials/2aa5a572-5dca-4176-94da-6a45b1750df9/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.058881521224975586,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/credentials/2aa5a572-5dca-4176-94da-6a45b1750df9/",
+      "method": "PATCH",
+      "status_code": 200,
+      "response_time": 0.07282447814941406,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/credentials/2aa5a572-5dca-4176-94da-6a45b1750df9/test/",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.05585122108459473,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/queue/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.058762311935424805,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05806374549865723,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/stats/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06030988693237305,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/schedules/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05418562889099121,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/schedules/",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.06835103034973145,
+      "success": false,
+      "error_message": "HTTP 500: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/webhooks/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.06930899620056152,
+      "success": false,
+      "error_message": "HTTP 500: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/webhooks/",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.06331419944763184,
+      "success": false,
+      "error_message": "HTTP 500: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/analytics/dashboards/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0669243335723877,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/dashboards/",
+      "method": "POST",
+      "status_code": 201,
+      "response_time": 0.07296967506408691,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/dashboards/68bdb0f8-f756-4ebf-851b-fe65faae09f3/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06389617919921875,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/dashboards/68bdb0f8-f756-4ebf-851b-fe65faae09f3/widgets/",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 0.05374550819396973,
+      "success": false,
+      "error_message": "HTTP 404: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/analytics/overview/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06575822830200195,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/usage/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.056777000427246094,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/performance/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05705523490905762,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/errors/",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.05396437644958496,
+      "success": false,
+      "error_message": "HTTP 404: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/analytics/metrics/?timeframe=7d&metric=executions",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.057837486267089844,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/metrics/?timeframe=30d&metric=success_rate",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05952000617980957,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/schema/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.29223084449768066,
+      "success": false,
+      "error_message": "HTTP 500: Unknown error"
+    },
+    {
+      "endpoint": "/api/docs/",
+      "method": "GET",
+      "status_code": 406,
+      "response_time": 0.04853940010070801,
+      "success": false,
+      "error_message": "HTTP 406: Unknown error"
+    },
+    {
+      "endpoint": "/api/redoc/",
+      "method": "GET",
+      "status_code": 406,
+      "response_time": 0.04728055000305176,
+      "success": false,
+      "error_message": "HTTP 406: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/workflows/?page=1&page_size=5",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.054280996322631836,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/?page=1&page_size=10",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.059699058532714844,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/?status=active",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05892753601074219,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/?trigger_type=manual",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06293487548828125,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/?status=completed",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.0544276237487793,
+      "success": false,
+      "error_message": "HTTP 400: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/workflows/?search=test",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05926394462585449,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/?ordering=-created_at",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05954623222351074,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/?ordering=name",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06045794486999512,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/invalid-endpoint/",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.05091524124145508,
+      "success": false,
+      "error_message": "HTTP 404: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 401,
+      "response_time": 0.04473590850830078,
+      "success": false,
+      "error_message": "HTTP 401: Authentication credentials were not provided."
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.049072980880737305,
+      "success": false,
+      "error_message": "HTTP 400: JSON parse error - Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "endpoint": "/api/v1/workflows/7f6c74e6-4e41-421e-99cc-ab049522b9a1/",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.05429720878601074,
+      "success": false,
+      "error_message": "HTTP 404: Not found."
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.04643082618713379,
+      "success": false,
+      "error_message": "HTTP 400: Unknown error"
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06264090538024902,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.059049367904663086,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.061795711517333984,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.060770511627197266,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06166243553161621,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05376172065734863,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.055877685546875,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.054872989654541016,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.05615425109863281,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/executions/history/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06031680107116699,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/overview/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06311488151550293,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/overview/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06292223930358887,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/overview/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.06296992301940918,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/overview/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.061913251876831055,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/analytics/overview/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.060891151428222656,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.08028888702392578,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.07404947280883789,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.07484030723571777,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.07154178619384766,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nodes/types/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.07773900032043457,
+      "success": true,
+      "error_message": null
+    }
+  ],
+  "test_data_created": {
+    "users": 0,
+    "organizations": 0,
+    "workflows": 2,
+    "executions": 0,
+    "node_types": 6,
+    "credentials": 4,
+    "dashboards": 4
+  }
+}

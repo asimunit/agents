@@ -10,7 +10,8 @@ from .views import (
     WebhookTemplateViewSet,
     webhook_receiver,
     webhook_test,
-    webhook_stats
+    webhook_stats,
+    WebhookViewSet
 )
 
 # Create router and register viewsets
@@ -19,6 +20,7 @@ router.register(r'endpoints', WebhookEndpointViewSet, basename='webhook-endpoint
 router.register(r'deliveries', WebhookDeliveryViewSet, basename='webhook-deliveries')
 router.register(r'events', WebhookEventViewSet, basename='webhook-events')
 router.register(r'templates', WebhookTemplateViewSet, basename='webhook-templates')
+router.register(r'', WebhookViewSet, basename='webhooks')
 
 urlpatterns = [
     # Router URLs

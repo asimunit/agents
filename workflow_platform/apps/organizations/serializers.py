@@ -226,17 +226,10 @@ class OrganizationAPIKeySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrganizationAPIKey
-        fields = [
-            'id', 'name', 'description', 'organization', 'key_preview',
-            'scopes', 'rate_limit_requests', 'allowed_ips', 'is_active',
-            'expires_at', 'is_expired', 'usage_count', 'last_used_at',
-            'created_by', 'created_at'
-        ]
-        read_only_fields = [
-            'id', 'organization', 'key_preview', 'is_expired', 'usage_count',
-            'last_used_at', 'created_by', 'created_at'
-        ]
 
+    fields = ['id', 'name', 'key_prefix', 'created_at', 'last_used_at', 'is_active']
+    # Remove 'description' if it doesn't exist in the model
+    read_only_fields = ['id', 'key_prefix', 'created_at', 'last_used_at']
     def get_key_preview(self, obj):
         """Get masked API key for display"""
         if obj.key:
