@@ -9,8 +9,10 @@ from sentry_sdk.integrations.redis import RedisIntegration
 
 # Security settings
 DEBUG = False
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '*']
+env = environ.Env(
+    DEBUG=(bool, False)
+)
 # Security headers
 SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
 SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)  # 1 year

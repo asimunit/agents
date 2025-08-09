@@ -1,66 +1,184 @@
 """
-Analytics models for comprehensive monitoring and business intelligence
+Analytics Models - Data analytics and reporting
 """
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models import Count, Avg, Sum
 from apps.organizations.models import Organization
-from apps.workflows.models import Workflow, WorkflowExecution
-from apps.nodes.models import NodeType
+from apps.workflows.models import Workflow
 import uuid
-from datetime import timedelta
+import json
 
 
 class AnalyticsDashboard(models.Model):
-    """
-    Custom analytics dashboards
-    """
+    """Custom analytics dashboards"""
 
     DASHBOARD_TYPES = [
         ('overview', 'Overview'),
         ('performance', 'Performance'),
         ('usage', 'Usage'),
         ('errors', 'Errors'),
-        ('business', 'Business'),
         ('custom', 'Custom'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='dashboards')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_dashboards')
 
-    # Dashboard configuration
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    dashboard_type = models.CharField(max_length=20, choices=DASHBOARD_TYPES, default='custom')
+    dashboard_type = models.CharField(max_length=20, choices=DASHBOARD_TYPES, default='overview')
 
-    # Layout and widgets
-    layout = models.JSONField(default=dict)  # Grid layout configuration
-    widgets = models.JSONField(default=list)  # Widget configurations
+    # Dashboard configuration
+    layout = models.JSONField(default=dict)  # Dashboard layout and widgets
+    filters = models.JSONField(default=dict)  # Default filters
+    refresh_interval = models.IntegerField(default=300)  # seconds
 
     # Sharing and permissions
     is_public = models.BooleanField(default=False)
     shared_with_users = models.ManyToManyField(User, blank=True, related_name='shared_dashboards')
 
-    # Metadata
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_dashboards')
+    # Status
+    is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'analytics_dashboards'
         indexes = [
-            models.Index(fields=['organization', 'dashboard_type']),
-            models.Index(fields=['created_by']),
+            models.Index(fields=['organization', 'is_active']),
+            models.Index(fields=['dashboard_type']),
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.organization.name})"
+        return f"{self.name} - {self.organization.name}"
 
 
-class MetricDefinition(models.Model):
-    """
-    Custom metric definitions for analytics
-    """
+class AnalyticsWidget(models.Model):
+    """Individual widgets for dashboards"""
+
+    WIDGET_TYPES = [
+        ('metric', 'Metric Card'),
+        ('chart', 'Chart'),
+        ('table', 'Data Table'),
+        ('gauge', 'Gauge'),
+        ('timeline', 'Timeline'),
+        ('heatmap', 'Heatmap'),
+        ('custom', 'Custom'),
+    ]
+
+    CHART_TYPES = [
+        ('line', 'Line Chart'),
+        ('bar', 'Bar Chart'),
+        ('pie', 'Pie Chart'),
+        ('area', 'Area Chart'),
+        ('scatter', 'Scatter Plot'),
+        ('histogram', 'Histogram'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    dashboard = models.ForeignKey(AnalyticsDashboard, on_delete=models.CASCADE, related_name='widgets')
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    widget_type = models.CharField(max_length=20, choices=WIDGET_TYPES, default='metric')
+    chart_type = models.CharField(max_length=20, choices=CHART_TYPES, blank=True)
+
+    # Widget configuration
+    query_config = models.JSONField(default=dict)  # Data query configuration
+    display_config = models.JSONField(default=dict)  # Display settings
+    size_config = models.JSONField(default=dict)  # Widget size and position
+
+    # Data source
+    data_source = models.CharField(max_length=100, default='executions')  # executions, workflows, etc.
+
+    # Refresh settings
+    auto_refresh = models.BooleanField(default=True)
+    refresh_interval = models.IntegerField(default=60)  # seconds
+
+    # Position in dashboard
+    position_x = models.IntegerField(default=0)
+    position_y = models.IntegerField(default=0)
+    width = models.IntegerField(default=4)
+    height = models.IntegerField(default=3)
+
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'analytics_widgets'
+        indexes = [
+            models.Index(fields=['dashboard', 'is_active']),
+            models.Index(fields=['widget_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.widget_type})"
+
+
+class AnalyticsReport(models.Model):
+    """Scheduled analytics reports"""
+
+    REPORT_TYPES = [
+        ('daily', 'Daily Summary'),
+        ('weekly', 'Weekly Report'),
+        ('monthly', 'Monthly Report'),
+        ('quarterly', 'Quarterly Report'),
+        ('custom', 'Custom Report'),
+    ]
+
+    DELIVERY_METHODS = [
+        ('email', 'Email'),
+        ('slack', 'Slack'),
+        ('webhook', 'Webhook'),
+        ('download', 'Download Only'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='analytics_reports')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_reports')
+
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    report_type = models.CharField(max_length=20, choices=REPORT_TYPES, default='weekly')
+
+    # Report configuration
+    report_config = models.JSONField(default=dict)  # Report structure and metrics
+    filters = models.JSONField(default=dict)  # Data filters
+
+    # Scheduling
+    schedule_expression = models.CharField(max_length=100)  # Cron expression
+    timezone = models.CharField(max_length=50, default='UTC')
+
+    # Delivery
+    delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHODS, default='email')
+    recipients = models.JSONField(default=list)  # Email addresses, Slack channels, etc.
+    delivery_config = models.JSONField(default=dict)  # Delivery-specific configuration
+
+    # Status
+    is_active = models.BooleanField(default=True)
+    last_generated_at = models.DateTimeField(null=True, blank=True)
+    next_generation_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'analytics_reports'
+        indexes = [
+            models.Index(fields=['organization', 'is_active']),
+            models.Index(fields=['next_generation_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.report_type}"
+
+
+class AnalyticsMetric(models.Model):
+    """Calculated analytics metrics"""
 
     METRIC_TYPES = [
         ('count', 'Count'),
@@ -68,6 +186,7 @@ class MetricDefinition(models.Model):
         ('average', 'Average'),
         ('percentage', 'Percentage'),
         ('ratio', 'Ratio'),
+        ('rate', 'Rate'),
         ('duration', 'Duration'),
     ]
 
@@ -81,163 +200,81 @@ class MetricDefinition(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='metric_definitions')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='analytics_metrics')
 
-    # Metric configuration
+    # Metric identification
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
     metric_type = models.CharField(max_length=20, choices=METRIC_TYPES)
+    category = models.CharField(max_length=100)  # workflows, executions, users, etc.
 
-    # Data source
-    source_model = models.CharField(max_length=100)  # e.g., 'WorkflowExecution'
-    source_field = models.CharField(max_length=100, blank=True)  # Field to aggregate
-    filters = models.JSONField(default=dict)  # Query filters
+    # Value and metadata
+    value = models.FloatField()
+    unit = models.CharField(max_length=50, blank=True)  # %, seconds, count, etc.
 
     # Aggregation
-    aggregation_period = models.CharField(max_length=20, choices=AGGREGATION_PERIODS, default='day')
+    aggregation_period = models.CharField(max_length=20, choices=AGGREGATION_PERIODS)
+    period_start = models.DateTimeField()
+    period_end = models.DateTimeField()
 
-    # Display
-    unit = models.CharField(max_length=50, blank=True)  # e.g., 'ms', '%', '$'
-    format_string = models.CharField(max_length=100, blank=True)  # e.g., '{value:.2f}%'
+    # Context
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, null=True, blank=True)
+    filters = models.JSONField(default=dict)  # Additional filters used
+    metadata = models.JSONField(default=dict)  # Additional metric metadata
 
-    # Status
-    is_active = models.BooleanField(default=True)
-
-    # Metadata
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_metrics')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'metric_definitions'
-        unique_together = ['organization', 'name']
-        indexes = [
-            models.Index(fields=['organization', 'is_active']),
-            models.Index(fields=['metric_type', 'aggregation_period']),
-        ]
-
-    def __str__(self):
-        return f"{self.name} ({self.metric_type})"
-
-
-class MetricValue(models.Model):
-    """
-    Stored metric values for time series data
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    metric_definition = models.ForeignKey(MetricDefinition, on_delete=models.CASCADE, related_name='values')
-
-    # Time series data
-    timestamp = models.DateTimeField()
-    value = models.FloatField()
-
-    # Additional dimensions
-    dimensions = models.JSONField(default=dict, blank=True)  # e.g., {'workflow_id': 'xxx', 'node_type': 'http'}
-
-    # Metadata
     calculated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'metric_values'
-        unique_together = ['metric_definition', 'timestamp', 'dimensions']
+        db_table = 'analytics_metrics'
+        unique_together = [
+            'organization', 'name', 'category', 'aggregation_period', 'period_start'
+        ]
         indexes = [
-            models.Index(fields=['metric_definition', 'timestamp']),
-            models.Index(fields=['timestamp', 'value']),
+            models.Index(fields=['organization', 'category', 'period_start']),
+            models.Index(fields=['name', 'period_start']),
+            models.Index(fields=['workflow', 'metric_type']),
         ]
 
     def __str__(self):
-        return f"{self.metric_definition.name}: {self.value} at {self.timestamp}"
+        return f"{self.name}: {self.value} {self.unit}"
 
 
-class PerformanceSnapshot(models.Model):
-    """
-    System performance snapshots
-    """
+class UsageAnalytics(models.Model):
+    """Usage analytics and trends"""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='performance_snapshots')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='usage_analytics')
 
-    # System metrics
-    cpu_usage_percent = models.FloatField(default=0)
-    memory_usage_mb = models.FloatField(default=0)
-    disk_usage_percent = models.FloatField(default=0)
-
-    # Application metrics
-    active_workflows = models.IntegerField(default=0)
-    running_executions = models.IntegerField(default=0)
-    queued_executions = models.IntegerField(default=0)
-
-    # Performance metrics
-    avg_execution_time_ms = models.FloatField(default=0)
-    api_response_time_ms = models.FloatField(default=0)
-    database_query_time_ms = models.FloatField(default=0)
-
-    # Error rates
-    error_rate_percent = models.FloatField(default=0)
-    timeout_rate_percent = models.FloatField(default=0)
-
-    # Resource usage
-    database_connections = models.IntegerField(default=0)
-    redis_memory_mb = models.FloatField(default=0)
-
-    # Timestamp
-    snapshot_time = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'performance_snapshots'
-        indexes = [
-            models.Index(fields=['organization', 'snapshot_time']),
-            models.Index(fields=['snapshot_time']),
-        ]
-
-    def __str__(self):
-        return f"Performance snapshot for {self.organization.name} at {self.snapshot_time}"
-
-
-class UsageStatistics(models.Model):
-    """
-    Daily usage statistics per organization
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='usage_statistics')
-
-    # Date
+    # Date tracking
     date = models.DateField()
+
+    # User metrics
+    active_users = models.IntegerField(default=0)
+    new_users = models.IntegerField(default=0)
+    total_users = models.IntegerField(default=0)
 
     # Workflow metrics
     workflows_created = models.IntegerField(default=0)
     workflows_executed = models.IntegerField(default=0)
-    workflows_active = models.IntegerField(default=0)
+    total_workflows = models.IntegerField(default=0)
 
     # Execution metrics
     total_executions = models.IntegerField(default=0)
     successful_executions = models.IntegerField(default=0)
     failed_executions = models.IntegerField(default=0)
-    avg_execution_time_ms = models.FloatField(default=0)
-
-    # API usage
-    api_calls = models.IntegerField(default=0)
-    webhook_deliveries = models.IntegerField(default=0)
+    average_execution_time = models.FloatField(default=0)  # seconds
 
     # Resource usage
-    compute_time_seconds = models.FloatField(default=0)
-    storage_used_mb = models.FloatField(default=0)
-    bandwidth_used_mb = models.FloatField(default=0)
+    total_compute_hours = models.FloatField(default=0)
+    total_storage_gb = models.FloatField(default=0)
+    api_calls_count = models.IntegerField(default=0)
 
-    # User activity
-    active_users = models.IntegerField(default=0)
-    login_count = models.IntegerField(default=0)
+    # Feature usage
+    feature_usage = models.JSONField(default=dict)  # Track feature adoption
 
-    # Node usage
-    node_executions = models.JSONField(default=dict)  # {'http_request': 150, 'email': 25}
-
-    # Cost tracking
-    estimated_cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'usage_statistics'
+        db_table = 'usage_analytics'
         unique_together = ['organization', 'date']
         indexes = [
             models.Index(fields=['organization', 'date']),
@@ -247,330 +284,121 @@ class UsageStatistics(models.Model):
     def __str__(self):
         return f"Usage for {self.organization.name} on {self.date}"
 
+    @property
+    def success_rate(self):
+        """Calculate execution success rate"""
+        if self.total_executions > 0:
+            return (self.successful_executions / self.total_executions) * 100
+        return 0
 
-class ErrorAnalytics(models.Model):
-    """
-    Error analytics and tracking
-    """
 
-    ERROR_TYPES = [
-        ('workflow_error', 'Workflow Error'),
-        ('node_error', 'Node Error'),
-        ('system_error', 'System Error'),
-        ('authentication_error', 'Authentication Error'),
-        ('validation_error', 'Validation Error'),
-        ('timeout_error', 'Timeout Error'),
-        ('network_error', 'Network Error'),
-        ('database_error', 'Database Error'),
+class PerformanceMetrics(models.Model):
+    """Performance metrics and benchmarks"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='performance_metrics')
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Time period
+    period_start = models.DateTimeField()
+    period_end = models.DateTimeField()
+
+    # Execution performance
+    avg_execution_time = models.FloatField(default=0)  # seconds
+    min_execution_time = models.FloatField(default=0)
+    max_execution_time = models.FloatField(default=0)
+    p95_execution_time = models.FloatField(default=0)  # 95th percentile
+
+    # Throughput metrics
+    executions_per_hour = models.FloatField(default=0)
+    peak_concurrent_executions = models.IntegerField(default=0)
+
+    # Resource utilization
+    avg_cpu_usage = models.FloatField(default=0)  # percentage
+    avg_memory_usage = models.FloatField(default=0)  # MB
+    peak_memory_usage = models.FloatField(default=0)  # MB
+
+    # Error rates
+    error_rate = models.FloatField(default=0)  # percentage
+    timeout_rate = models.FloatField(default=0)  # percentage
+    retry_rate = models.FloatField(default=0)  # percentage
+
+    # Quality metrics
+    data_quality_score = models.FloatField(default=0)  # 0-100
+    reliability_score = models.FloatField(default=0)  # 0-100
+
+    calculated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'performance_metrics'
+        indexes = [
+            models.Index(fields=['organization', 'period_start']),
+            models.Index(fields=['workflow', 'period_start']),
+            models.Index(fields=['period_start']),
+        ]
+
+    def __str__(self):
+        workflow_name = self.workflow.name if self.workflow else "All Workflows"
+        return f"Performance for {workflow_name} ({self.period_start.date()})"
+
+
+class AnalyticsAlert(models.Model):
+    """Analytics-based alerts and notifications"""
+
+    ALERT_TYPES = [
+        ('threshold', 'Threshold Alert'),
+        ('anomaly', 'Anomaly Detection'),
+        ('trend', 'Trend Alert'),
+        ('sla', 'SLA Violation'),
     ]
 
     SEVERITY_LEVELS = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
+        ('info', 'Information'),
+        ('warning', 'Warning'),
         ('critical', 'Critical'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='error_analytics')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='analytics_alerts')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    # Error details
-    error_type = models.CharField(max_length=50, choices=ERROR_TYPES)
-    error_message = models.TextField()
-    error_code = models.CharField(max_length=100, blank=True)
-    severity = models.CharField(max_length=20, choices=SEVERITY_LEVELS, default='medium')
-
-    # Context
-    workflow = models.ForeignKey(Workflow, on_delete=models.SET_NULL, null=True, blank=True)
-    node_type = models.ForeignKey(NodeType, on_delete=models.SET_NULL, null=True, blank=True)
-    execution_id = models.UUIDField(null=True, blank=True)
-
-    # Stack trace and debugging info
-    stack_trace = models.TextField(blank=True)
-    context_data = models.JSONField(default=dict, blank=True)
-
-    # Occurrence tracking
-    first_seen = models.DateTimeField(auto_now_add=True)
-    last_seen = models.DateTimeField(auto_now=True)
-    occurrence_count = models.IntegerField(default=1)
-
-    # Resolution
-    is_resolved = models.BooleanField(default=False)
-    resolved_at = models.DateTimeField(null=True, blank=True)
-    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    resolution_notes = models.TextField(blank=True)
-
-    class Meta:
-        db_table = 'error_analytics'
-        indexes = [
-            models.Index(fields=['organization', 'error_type']),
-            models.Index(fields=['severity', 'is_resolved']),
-            models.Index(fields=['first_seen', 'last_seen']),
-        ]
-
-    def __str__(self):
-        return f"{self.error_type}: {self.error_message[:50]}"
-
-
-class AlertRule(models.Model):
-    """
-    Alert rules for monitoring and notifications
-    """
-
-    CONDITION_TYPES = [
-        ('threshold', 'Threshold'),
-        ('percentage', 'Percentage'),
-        ('rate', 'Rate'),
-        ('anomaly', 'Anomaly'),
-    ]
-
-    OPERATORS = [
-        ('>', 'Greater than'),
-        ('<', 'Less than'),
-        ('>=', 'Greater than or equal'),
-        ('<=', 'Less than or equal'),
-        ('=', 'Equal'),
-        ('!=', 'Not equal'),
-    ]
-
-    NOTIFICATION_CHANNELS = [
-        ('email', 'Email'),
-        ('slack', 'Slack'),
-        ('webhook', 'Webhook'),
-        ('sms', 'SMS'),
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='alert_rules')
-
-    # Rule configuration
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    description = models.TextField()
+    alert_type = models.CharField(max_length=20, choices=ALERT_TYPES)
+    severity = models.CharField(max_length=20, choices=SEVERITY_LEVELS, default='warning')
 
-    # Condition
-    metric = models.ForeignKey(MetricDefinition, on_delete=models.CASCADE, related_name='alert_rules')
-    condition_type = models.CharField(max_length=20, choices=CONDITION_TYPES)
-    operator = models.CharField(max_length=5, choices=OPERATORS)
-    threshold_value = models.FloatField()
+    # Alert conditions
+    metric_name = models.CharField(max_length=255)
+    condition = models.JSONField(default=dict)  # Alert condition configuration
+    threshold_config = models.JSONField(default=dict)  # Threshold settings
 
-    # Time window
-    evaluation_window_minutes = models.IntegerField(default=5)
-    evaluation_frequency_minutes = models.IntegerField(default=1)
-
-    # Notification
-    notification_channels = models.JSONField(default=list)  # [{'type': 'email', 'config': {...}}]
-    cooldown_minutes = models.IntegerField(default=30)  # Prevent spam
-
-    # Filters
-    filters = models.JSONField(default=dict, blank=True)  # Additional filtering
+    # Notification settings
+    notification_channels = models.JSONField(default=list)  # email, slack, etc.
+    notification_config = models.JSONField(default=dict)
 
     # Status
-    last_triggered = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    last_triggered_at = models.DateTimeField(null=True, blank=True)
     trigger_count = models.IntegerField(default=0)
 
-    # Metadata
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_alert_rules')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'alert_rules'
+        db_table = 'analytics_alerts'
         indexes = [
             models.Index(fields=['organization', 'is_active']),
-            models.Index(fields=['metric', 'is_active']),
+            models.Index(fields=['metric_name', 'is_active']),
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.organization.name})"
+        return f"{self.name} - {self.severity}"
 
+    def trigger_alert(self, value, context=None):
+        """Trigger the alert"""
+        self.last_triggered_at = timezone.now()
+        self.trigger_count += 1
+        self.save()
 
-class AlertInstance(models.Model):
-    """
-    Individual alert instances when rules are triggered
-    """
-
-    STATUS_CHOICES = [
-        ('firing', 'Firing'),
-        ('resolved', 'Resolved'),
-        ('suppressed', 'Suppressed'),
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    alert_rule = models.ForeignKey(AlertRule, on_delete=models.CASCADE, related_name='instances')
-
-    # Alert details
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='firing')
-    triggered_value = models.FloatField()
-    threshold_value = models.FloatField()
-
-    # Context
-    context_data = models.JSONField(default=dict, blank=True)
-
-    # Timing
-    triggered_at = models.DateTimeField(auto_now_add=True)
-    resolved_at = models.DateTimeField(null=True, blank=True)
-
-    # Notifications
-    notifications_sent = models.JSONField(default=list, blank=True)
-
-    class Meta:
-        db_table = 'alert_instances'
-        indexes = [
-            models.Index(fields=['alert_rule', 'status']),
-            models.Index(fields=['triggered_at']),
-        ]
-
-    def __str__(self):
-        return f"Alert: {self.alert_rule.name} at {self.triggered_at}"
-
-
-class BusinessMetrics(models.Model):
-    """
-    Business-level metrics and KPIs
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='business_metrics')
-
-    # Date
-    date = models.DateField()
-
-    # Revenue impact metrics (if cost tracking is enabled)
-    estimated_cost_savings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    automation_hours_saved = models.FloatField(default=0)
-
-    # Efficiency metrics
-    workflows_automated = models.IntegerField(default=0)
-    manual_processes_replaced = models.IntegerField(default=0)
-    error_reduction_percent = models.FloatField(default=0)
-
-    # User adoption metrics
-    active_users = models.IntegerField(default=0)
-    new_workflows_created = models.IntegerField(default=0)
-    workflow_adoption_rate = models.FloatField(default=0)
-
-    # ROI metrics
-    total_executions = models.IntegerField(default=0)
-    avg_execution_value = models.DecimalField(max_digits=10, decimal_places=4, default=0)
-
-    # Custom KPIs
-    custom_metrics = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        db_table = 'business_metrics'
-        unique_together = ['organization', 'date']
-        indexes = [
-            models.Index(fields=['organization', 'date']),
-        ]
-
-    def __str__(self):
-        return f"Business metrics for {self.organization.name} on {self.date}"
-
-
-class ReportTemplate(models.Model):
-    """
-    Report templates for scheduled reporting
-    """
-
-    REPORT_TYPES = [
-        ('executive', 'Executive Summary'),
-        ('operational', 'Operational Report'),
-        ('performance', 'Performance Report'),
-        ('usage', 'Usage Report'),
-        ('custom', 'Custom Report'),
-    ]
-
-    FREQUENCY_CHOICES = [
-        ('daily', 'Daily'),
-        ('weekly', 'Weekly'),
-        ('monthly', 'Monthly'),
-        ('quarterly', 'Quarterly'),
-        ('on_demand', 'On Demand'),
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='report_templates')
-
-    # Template configuration
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    report_type = models.CharField(max_length=20, choices=REPORT_TYPES)
-
-    # Content configuration
-    sections = models.JSONField(default=list)  # Report sections and widgets
-    metrics = models.ManyToManyField(MetricDefinition, blank=True, related_name='report_templates')
-
-    # Scheduling
-    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='on_demand')
-    schedule_time = models.TimeField(null=True, blank=True)
-    schedule_day = models.IntegerField(null=True, blank=True)  # Day of week/month
-
-    # Distribution
-    recipients = models.JSONField(default=list)  # Email addresses
-    delivery_format = models.CharField(max_length=20, choices=[
-        ('pdf', 'PDF'),
-        ('email', 'Email'),
-        ('dashboard', 'Dashboard Link'),
-    ], default='pdf')
-
-    # Status
-    is_active = models.BooleanField(default=True)
-    last_generated = models.DateTimeField(null=True, blank=True)
-
-    # Metadata
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_report_templates')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'report_templates'
-        indexes = [
-            models.Index(fields=['organization', 'is_active']),
-            models.Index(fields=['frequency', 'is_active']),
-        ]
-
-    def __str__(self):
-        return f"{self.name} ({self.frequency})"
-
-
-class GeneratedReport(models.Model):
-    """
-    Generated report instances
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    template = models.ForeignKey(ReportTemplate, on_delete=models.CASCADE, related_name='generated_reports')
-
-    # Report details
-    title = models.CharField(max_length=255)
-    period_start = models.DateTimeField()
-    period_end = models.DateTimeField()
-
-    # Content
-    report_data = models.JSONField(default=dict)  # Generated report data
-    file_path = models.CharField(max_length=500, blank=True)  # PDF file path
-
-    # Status
-    generation_status = models.CharField(max_length=20, choices=[
-        ('pending', 'Pending'),
-        ('generating', 'Generating'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ], default='pending')
-
-    error_message = models.TextField(blank=True)
-
-    # Metadata
-    generated_at = models.DateTimeField(auto_now_add=True)
-    generated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
-    class Meta:
-        db_table = 'generated_reports'
-        indexes = [
-            models.Index(fields=['template', 'generated_at']),
-            models.Index(fields=['generation_status']),
-        ]
-
-    def __str__(self):
-        return f"{self.title} - {self.generated_at}"
+        # Here would be logic to send notifications
+        # based on notification_channels and notification_config

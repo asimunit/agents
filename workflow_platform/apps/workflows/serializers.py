@@ -462,3 +462,32 @@ class WorkflowStatisticsSerializer(serializers.Serializer):
     popular_workflows = serializers.ListField(
         child=serializers.DictField()
     )
+
+
+class WorkflowStatsSerializer(serializers.Serializer):
+    """Workflow statistics serializer"""
+
+    total_workflows = serializers.IntegerField()
+    active_workflows = serializers.IntegerField()
+    draft_workflows = serializers.IntegerField()
+    total_executions = serializers.IntegerField()
+    successful_executions = serializers.IntegerField()
+    failed_executions = serializers.IntegerField()
+    success_rate = serializers.FloatField()
+    avg_execution_time = serializers.FloatField(allow_null=True)
+    most_used_workflows = serializers.ListField(child=serializers.DictField())
+    recent_workflows = serializers.ListField(child=serializers.DictField())
+
+
+class WorkflowCloneSerializer(serializers.Serializer):
+    """Workflow clone serializer"""
+
+    name = serializers.CharField()
+    description = serializers.CharField(required=False, allow_blank=True)
+    modifications = serializers.DictField(required=False, default=dict)
+
+    def validate_name(self, value):
+        """Validate workflow name"""
+        if not value or len(value.strip()) == 0:
+            raise serializers.ValidationError("Workflow name cannot be empty")
+        return value.strip()

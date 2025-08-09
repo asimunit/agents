@@ -5,9 +5,12 @@ import os
 from pathlib import Path
 import environ
 
+# from workflow_platform.settings.production import DEBUG
+
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '*']
+DEBUG = False
 # Environment variables
 env = environ.Env(
     DEBUG=(bool, False)

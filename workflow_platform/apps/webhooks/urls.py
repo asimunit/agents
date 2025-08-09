@@ -1,42 +1,37 @@
 """
-Authentication URL Configuration
+Webhooks URL Configuration
 """
-from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
-    CustomTokenObtainPairView,
-    UserRegistrationView,
-    UserProfileView,
-    PasswordChangeView,
-    PasswordResetView,
-    LogoutView,
-    OrganizationInviteView,
-    AcceptInvitationView,
-    user_organizations,
-    switch_organization,
-    auth_status
+    WebhookEndpointViewSet,
+    WebhookDeliveryViewSet,
+    WebhookEventViewSet,
+    WebhookTemplateViewSet,
+    webhook_receiver,
+    webhook_test,
+    webhook_stats
 )
 
+# Create router and register viewsets
+router = DefaultRouter()
+router.register(r'endpoints', WebhookEndpointViewSet, basename='webhook-endpoints')
+router.register(r'deliveries', WebhookDeliveryViewSet, basename='webhook-deliveries')
+router.register(r'events', WebhookEventViewSet, basename='webhook-events')
+router.register(r'templates', WebhookTemplateViewSet, basename='webhook-templates')
+
 urlpatterns = [
-    # Authentication endpoints
-    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('register/', UserRegistrationView.as_view(), name='register'),
+    # Router URLs
+    path('', include(router.urls)),
 
-    # User profile
-    path('profile/', UserProfileView.as_view(), name='user_profile'),
-    path('change-password/', PasswordChangeView.as_view(), name='change_password'),
-    path('reset-password/', PasswordResetView.as_view(), name='reset_password'),
+    # Webhook receiver endpoint
+    path('receive/<str:url_path>/', webhook_receiver, name='webhook_receiver'),
 
-    # Organization management
-    path('invite/', OrganizationInviteView.as_view(), name='organization_invite'),
-    path('invite/<str:token>/', AcceptInvitationView.as_view(), name='accept_invitation'),
-    path('organizations/', user_organizations, name='user_organizations'),
-    path('switch-organization/', switch_organization, name='switch_organization'),
+    # Webhook testing
+    path('test/<uuid:webhook_id>/', webhook_test, name='webhook_test'),
 
-    # Status
-    path('status/', auth_status, name='auth_status'),
+    # Statistics
+    path('stats/', webhook_stats, name='webhook_stats'),
 ]
 
-app_name = 'authentication'
+app_name = 'webhooks'

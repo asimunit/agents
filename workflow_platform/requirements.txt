@@ -77,3 +77,4 @@ pytest-cov==5.0.0
 gunicorn==22.0.0
 uvicorn==0.30.5
 whitenoise==6.7.0
+psutil

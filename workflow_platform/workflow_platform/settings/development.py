@@ -2,8 +2,12 @@
 Development settings for Workflow Platform
 """
 from .base import *
+import environ
+import sys
 import os
-
+env = environ.Env(
+    DEBUG=(bool, False)
+)
 # Debug settings
 DEBUG = True
 

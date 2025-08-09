@@ -1,48 +1,74 @@
 """
-Webhook Serializers
+Webhook Serializers - API serialization for webhook management
 """
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    WebhookEndpoint, WebhookDelivery, WebhookEvent,
-    WebhookTemplate, WebhookRateLimit
+    WebhookEndpoint, WebhookDelivery, WebhookRateLimit,
+    WebhookEvent, WebhookTemplate
 )
 from apps.workflows.models import Workflow
 
 
-class WebhookEndpointSerializer(serializers.ModelSerializer):
-    """
-    Webhook endpoint serializer
-    """
+class UserBasicSerializer(serializers.ModelSerializer):
+    """Basic user information for nested serialization"""
 
-    workflow_name = serializers.CharField(source='workflow.name', read_only=True)
-    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
-    full_url = serializers.ReadOnlyField()
-    success_rate = serializers.ReadOnlyField()
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        read_only_fields = fields
+
+
+class WorkflowBasicSerializer(serializers.ModelSerializer):
+    """Basic workflow information for nested serialization"""
+
+    class Meta:
+        model = Workflow
+        fields = ['id', 'name', 'description', 'status']
+        read_only_fields = fields
+
+
+class WebhookEndpointSerializer(serializers.ModelSerializer):
+    """Webhook endpoint serializer"""
+
+    workflow = WorkflowBasicSerializer(read_only=True)
+    created_by = UserBasicSerializer(read_only=True)
+    full_url = serializers.SerializerMethodField()
+    success_rate = serializers.SerializerMethodField()
 
     class Meta:
         model = WebhookEndpoint
         fields = [
-            'id', 'name', 'description', 'url_path', 'full_url', 'workflow',
-            'workflow_name', 'authentication_type', 'allowed_methods',
-            'allowed_ips', 'custom_headers', 'rate_limit_requests',
-            'rate_limit_window', 'timeout_seconds', 'retry_attempts',
-            'retry_delay', 'data_format', 'status', 'is_public',
-            'total_requests', 'successful_requests', 'failed_requests',
-            'success_rate', 'last_triggered_at', 'created_by_name',
-            'created_at', 'updated_at'
+            'id', 'name', 'description', 'workflow', 'url_path', 'full_url',
+            'status', 'authentication_type', 'allowed_methods', 'allowed_ips',
+            'custom_headers', 'rate_limit_requests', 'rate_limit_window',
+            'timeout_seconds', 'retry_attempts', 'retry_delay', 'data_format',
+            'total_deliveries', 'successful_deliveries', 'failed_deliveries',
+            'last_triggered_at', 'success_rate', 'created_by', 'created_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'url_path', 'full_url', 'workflow_name', 'total_requests',
-            'successful_requests', 'failed_requests', 'success_rate',
-            'last_triggered_at', 'created_by_name', 'created_at', 'updated_at'
+            'id', 'url_path', 'full_url', 'total_deliveries', 'successful_deliveries',
+            'failed_deliveries', 'last_triggered_at', 'success_rate', 'created_by',
+            'created_at', 'updated_at'
         ]
+
+    def get_full_url(self, obj):
+        """Get full webhook URL"""
+        request = self.context.get('request')
+        if request:
+            base_url = f"{request.scheme}://{request.get_host()}"
+            return f"{base_url}/webhooks/{obj.url_path}/"
+        return f"/webhooks/{obj.url_path}/"
+
+    def get_success_rate(self, obj):
+        """Calculate success rate"""
+        if obj.total_deliveries > 0:
+            return round((obj.successful_deliveries / obj.total_deliveries) * 100, 2)
+        return 0
 
 
 class WebhookEndpointCreateSerializer(serializers.ModelSerializer):
-    """
-    Webhook endpoint creation serializer
-    """
+    """Serializer for creating webhook endpoints"""
 
     workflow_id = serializers.UUIDField(write_only=True)
 
@@ -50,358 +76,283 @@ class WebhookEndpointCreateSerializer(serializers.ModelSerializer):
         model = WebhookEndpoint
         fields = [
             'name', 'description', 'workflow_id', 'authentication_type',
-            'secret_token', 'signature_header', 'allowed_methods',
-            'allowed_ips', 'custom_headers', 'rate_limit_requests',
-            'rate_limit_window', 'timeout_seconds', 'retry_attempts',
-            'retry_delay', 'data_format', 'status', 'is_public'
+            'secret_token', 'signature_header', 'allowed_methods', 'allowed_ips',
+            'custom_headers', 'rate_limit_requests', 'rate_limit_window',
+            'timeout_seconds', 'retry_attempts', 'retry_delay', 'data_format'
         ]
 
     def validate_workflow_id(self, value):
-        """Validate workflow belongs to organization"""
+        """Validate workflow exists and user has access"""
         request = self.context['request']
         organization = request.user.organization_memberships.first().organization
 
         try:
-            workflow = Workflow.objects.get(id=value, organization=organization)
+            workflow = Workflow.objects.get(
+                id=value,
+                organization=organization
+            )
             return workflow
         except Workflow.DoesNotExist:
             raise serializers.ValidationError("Workflow not found or access denied")
 
     def validate_allowed_methods(self, value):
-        """Validate HTTP methods"""
+        """Validate allowed HTTP methods"""
         if not value:
             return ['POST']  # Default to POST
 
-        valid_methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+        valid_methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
         for method in value:
-            if method not in valid_methods:
+            if method.upper() not in valid_methods:
                 raise serializers.ValidationError(f"Invalid HTTP method: {method}")
 
-        return value
+        return [method.upper() for method in value]
 
     def validate_allowed_ips(self, value):
-        """Validate IP addresses and CIDR blocks"""
+        """Validate IP addresses"""
         if not value:
-            return value
+            return []
 
         import ipaddress
-
-        for ip_entry in value:
+        for ip in value:
             try:
-                if '/' in ip_entry:
-                    ipaddress.ip_network(ip_entry, strict=False)
-                else:
-                    ipaddress.ip_address(ip_entry)
+                ipaddress.ip_address(ip)
             except ValueError:
-                raise serializers.ValidationError(f"Invalid IP address or CIDR: {ip_entry}")
-
-        return value
-
-    def validate_rate_limit_requests(self, value):
-        """Validate rate limit"""
-        if value < 1 or value > 10000:
-            raise serializers.ValidationError("Rate limit must be between 1 and 10000 requests")
-        return value
-
-    def validate_secret_token(self, value):
-        """Validate secret token"""
-        if self.initial_data.get('authentication_type') in ['secret', 'bearer', 'signature']:
-            if not value:
-                raise serializers.ValidationError("Secret token is required for this authentication type")
-
-            if len(value) < 16:
-                raise serializers.ValidationError("Secret token must be at least 16 characters long")
+                try:
+                    ipaddress.ip_network(ip, strict=False)
+                except ValueError:
+                    raise serializers.ValidationError(f"Invalid IP address or network: {ip}")
 
         return value
 
     def create(self, validated_data):
         """Create webhook endpoint"""
         workflow = validated_data.pop('workflow_id')
-        validated_data['workflow'] = workflow
+        request = self.context['request']
+        organization = request.user.organization_memberships.first().organization
 
-        return super().create(validated_data)
+        webhook = WebhookEndpoint.objects.create(
+            organization=organization,
+            workflow=workflow,
+            created_by=request.user,
+            **validated_data
+        )
+
+        # Generate unique URL path
+        webhook.generate_url_path()
+        webhook.save()
+
+        return webhook
 
 
 class WebhookDeliverySerializer(serializers.ModelSerializer):
-    """
-    Webhook delivery serializer
-    """
+    """Webhook delivery serializer"""
 
-    webhook_name = serializers.CharField(source='webhook_endpoint.name', read_only=True)
-    workflow_name = serializers.CharField(source='webhook_endpoint.workflow.name', read_only=True)
-    duration_ms = serializers.SerializerMethodField()
+    webhook_endpoint = WebhookEndpointSerializer(read_only=True)
+    duration = serializers.SerializerMethodField()
+    can_retry = serializers.ReadOnlyField()
 
     class Meta:
         model = WebhookDelivery
         fields = [
-            'id', 'webhook_name', 'workflow_name', 'http_method', 'ip_address',
-            'user_agent', 'status', 'workflow_execution_id', 'response_status_code',
-            'error_message', 'retry_count', 'received_at', 'processed_at',
-            'processing_time_ms', 'duration_ms'
+            'id', 'webhook_endpoint', 'delivery_id', 'trigger_event',
+            'request_method', 'request_headers', 'request_body',
+            'response_status_code', 'response_headers', 'response_body',
+            'response_time_ms', 'status', 'attempt_number', 'max_attempts',
+            'next_retry_at', 'duration', 'can_retry', 'created_at', 'sent_at'
         ]
         read_only_fields = fields
 
-    def get_duration_ms(self, obj):
-        """Get processing duration in milliseconds"""
-        if obj.received_at and obj.processed_at:
-            return int((obj.processed_at - obj.received_at).total_seconds() * 1000)
+    def get_duration(self, obj):
+        """Calculate delivery duration"""
+        if obj.sent_at and obj.created_at:
+            delta = obj.sent_at - obj.created_at
+            return delta.total_seconds()
         return None
 
 
-class WebhookDeliveryDetailSerializer(WebhookDeliverySerializer):
-    """
-    Detailed webhook delivery serializer with payload data
-    """
-
-    class Meta(WebhookDeliverySerializer.Meta):
-        fields = WebhookDeliverySerializer.Meta.fields + [
-            'headers', 'payload', 'raw_payload', 'response_headers',
-            'response_body', 'error_details'
-        ]
-
-
-class WebhookEventSerializer(serializers.ModelSerializer):
-    """
-    Webhook event serializer
-    """
-
-    webhook_name = serializers.CharField(source='webhook_endpoint.name', read_only=True)
-    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
-
-    class Meta:
-        model = WebhookEvent
-        fields = [
-            'id', 'webhook_name', 'event_type', 'description', 'user_name',
-            'ip_address', 'user_agent', 'event_data', 'created_at'
-        ]
-        read_only_fields = fields
-
-
-class WebhookTemplateSerializer(serializers.ModelSerializer):
-    """
-    Webhook template serializer
-    """
-
-    class Meta:
-        model = WebhookTemplate
-        fields = [
-            'id', 'name', 'description', 'category', 'service_name',
-            'service_icon', 'documentation_url', 'configuration',
-            'example_payload', 'usage_count', 'is_featured', 'is_official',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = fields
-
-
-class WebhookAnalyticsSerializer(serializers.Serializer):
-    """
-    Webhook analytics data serializer
-    """
-
-    overview = serializers.DictField()
-    daily_stats = serializers.ListField(child=serializers.DictField())
-    error_analysis = serializers.ListField(child=serializers.DictField())
-    top_source_ips = serializers.ListField(child=serializers.DictField())
-    performance_metrics = serializers.DictField(required=False)
-
-
 class WebhookRateLimitSerializer(serializers.ModelSerializer):
-    """
-    Webhook rate limit serializer
-    """
+    """Webhook rate limit serializer"""
+
+    webhook_endpoint = WebhookEndpointSerializer(read_only=True)
+    time_remaining = serializers.SerializerMethodField()
 
     class Meta:
         model = WebhookRateLimit
         fields = [
-            'ip_address', 'request_count', 'window_start', 'last_request',
-            'is_blocked', 'blocked_until'
+            'id', 'webhook_endpoint', 'ip_address', 'request_count',
+            'window_start', 'is_blocked', 'time_remaining',
+            'created_at', 'updated_at'
         ]
         read_only_fields = fields
 
+    def get_time_remaining(self, obj):
+        """Calculate time remaining in current window"""
+        from django.utils import timezone
+        window_duration = timezone.timedelta(seconds=obj.webhook_endpoint.rate_limit_window)
+        window_end = obj.window_start + window_duration
+        remaining = window_end - timezone.now()
 
-class WebhookTestSerializer(serializers.Serializer):
-    """
-    Webhook test request serializer
-    """
-
-    payload = serializers.JSONField(default=dict)
-    headers = serializers.DictField(default=dict, required=False)
-    method = serializers.ChoiceField(
-        choices=['GET', 'POST', 'PUT', 'PATCH'],
-        default='POST'
-    )
-
-    def validate_payload(self, value):
-        """Validate test payload"""
-        if not isinstance(value, dict):
-            raise serializers.ValidationError("Payload must be an object")
-        return value
+        if remaining.total_seconds() > 0:
+            return remaining.total_seconds()
+        return 0
 
 
-class WebhookBulkOperationSerializer(serializers.Serializer):
-    """
-    Bulk webhook operations serializer
-    """
+class WebhookEventSerializer(serializers.ModelSerializer):
+    """Webhook event serializer"""
 
-    webhook_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        min_length=1,
-        max_length=50
-    )
-    operation = serializers.ChoiceField(choices=[
-        'activate', 'deactivate', 'delete', 'regenerate_urls'
-    ])
+    webhook_endpoint = WebhookEndpointSerializer(read_only=True)
+    processing_time_seconds = serializers.SerializerMethodField()
 
-    def validate_webhook_ids(self, value):
-        """Validate webhook IDs belong to organization"""
+    class Meta:
+        model = WebhookEvent
+        fields = [
+            'id', 'webhook_endpoint', 'name', 'event_type', 'event_data',
+            'processed', 'processed_at', 'processing_time', 'processing_time_seconds',
+            'processing_result', 'error_message', 'error_details',
+            'metadata', 'created_at'
+        ]
+        read_only_fields = [
+            'id', 'processed_at', 'processing_time', 'processing_time_seconds',
+            'processing_result', 'error_message', 'error_details', 'created_at'
+        ]
+
+    def get_processing_time_seconds(self, obj):
+        """Get processing time in seconds"""
+        if obj.processing_time:
+            return obj.processing_time.total_seconds()
+        return None
+
+
+class WebhookEventCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating webhook events"""
+
+    webhook_endpoint_id = serializers.UUIDField(write_only=True)
+
+    class Meta:
+        model = WebhookEvent
+        fields = [
+            'webhook_endpoint_id', 'name', 'event_type', 'event_data', 'metadata'
+        ]
+
+    def validate_webhook_endpoint_id(self, value):
+        """Validate webhook endpoint exists and user has access"""
         request = self.context['request']
         organization = request.user.organization_memberships.first().organization
 
-        existing_ids = set(
-            WebhookEndpoint.objects.filter(
-                id__in=value,
+        try:
+            webhook = WebhookEndpoint.objects.get(
+                id=value,
                 organization=organization
-            ).values_list('id', flat=True)
+            )
+            return webhook
+        except WebhookEndpoint.DoesNotExist:
+            raise serializers.ValidationError("Webhook endpoint not found or access denied")
+
+    def create(self, validated_data):
+        """Create webhook event"""
+        webhook_endpoint = validated_data.pop('webhook_endpoint_id')
+
+        event = WebhookEvent.objects.create(
+            webhook_endpoint=webhook_endpoint,
+            **validated_data
         )
 
-        invalid_ids = set(value) - existing_ids
-        if invalid_ids:
-            raise serializers.ValidationError(
-                f"Invalid webhook IDs: {list(invalid_ids)}"
-            )
+        return event
 
+
+class WebhookTemplateSerializer(serializers.ModelSerializer):
+    """Webhook template serializer"""
+
+    created_by = UserBasicSerializer(read_only=True)
+
+    class Meta:
+        model = WebhookTemplate
+        fields = [
+            'id', 'name', 'description', 'webhook_type', 'default_config',
+            'example_payload', 'setup_instructions', 'validation_rules',
+            'is_active', 'usage_count', 'created_by', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'usage_count', 'created_by', 'created_at', 'updated_at'
+        ]
+
+
+class WebhookTemplateCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating webhook templates"""
+
+    class Meta:
+        model = WebhookTemplate
+        fields = [
+            'name', 'description', 'webhook_type', 'default_config',
+            'example_payload', 'setup_instructions', 'validation_rules'
+        ]
+
+    def validate_default_config(self, value):
+        """Validate default configuration"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Default config must be a JSON object")
         return value
 
-
-class WebhookImportSerializer(serializers.Serializer):
-    """
-    Webhook import serializer
-    """
-
-    webhooks = serializers.ListField(child=serializers.DictField())
-    overwrite_existing = serializers.BooleanField(default=False)
-
-    def validate_webhooks(self, value):
-        """Validate webhook import data"""
-        required_fields = ['name', 'workflow_id', 'authentication_type']
-
-        for i, webhook_data in enumerate(value):
-            for field in required_fields:
-                if field not in webhook_data:
-                    raise serializers.ValidationError(
-                        f"Webhook {i}: Missing required field '{field}'"
-                    )
-
+    def validate_example_payload(self, value):
+        """Validate example payload"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Example payload must be a JSON object")
         return value
 
+    def create(self, validated_data):
+        """Create webhook template"""
+        request = self.context['request']
 
-class WebhookExportSerializer(serializers.Serializer):
-    """
-    Webhook export serializer
-    """
+        template = WebhookTemplate.objects.create(
+            created_by=request.user,
+            **validated_data
+        )
 
-    include_credentials = serializers.BooleanField(default=False)
-    include_analytics = serializers.BooleanField(default=False)
-    format = serializers.ChoiceField(choices=['json', 'yaml'], default='json')
+        return template
 
 
-class WebhookStatisticsSerializer(serializers.Serializer):
-    """
-    Webhook statistics serializer
-    """
+class WebhookStatsSerializer(serializers.Serializer):
+    """Webhook statistics serializer"""
 
-    total_webhooks = serializers.IntegerField()
-    active_webhooks = serializers.IntegerField()
+    total_endpoints = serializers.IntegerField()
+    active_endpoints = serializers.IntegerField()
     total_deliveries = serializers.IntegerField()
     successful_deliveries = serializers.IntegerField()
     failed_deliveries = serializers.IntegerField()
     success_rate = serializers.FloatField()
-    average_processing_time = serializers.FloatField()
+    average_response_time = serializers.FloatField()
 
-    # Time-based statistics
-    deliveries_today = serializers.IntegerField()
-    deliveries_this_week = serializers.IntegerField()
-    deliveries_this_month = serializers.IntegerField()
+    # Trends
+    daily_deliveries = serializers.ListField(
+        child=serializers.DictField()
+    )
 
-    # Top performing webhooks
-    top_webhooks = serializers.ListField(
-        child=serializers.DictField(),
-        required=False
+    # Top endpoints
+    top_endpoints = serializers.ListField(
+        child=serializers.DictField()
     )
 
 
-class WebhookSecuritySerializer(serializers.Serializer):
-    """
-    Webhook security configuration serializer
-    """
+class WebhookTestSerializer(serializers.Serializer):
+    """Serializer for webhook testing"""
 
-    enable_ip_whitelist = serializers.BooleanField(default=False)
-    allowed_ips = serializers.ListField(
-        child=serializers.IPAddressField(),
-        required=False
-    )
-    enable_rate_limiting = serializers.BooleanField(default=True)
-    rate_limit_requests = serializers.IntegerField(min_value=1, max_value=10000)
-    rate_limit_window = serializers.IntegerField(min_value=60, max_value=86400)
+    test_data = serializers.JSONField(default=dict)
+    headers = serializers.JSONField(default=dict)
 
-    # Authentication settings
-    require_authentication = serializers.BooleanField(default=True)
-    authentication_type = serializers.ChoiceField(choices=[
-        'none', 'secret', 'signature', 'basic', 'bearer'
-    ])
+    def validate_test_data(self, value):
+        """Validate test data"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Test data must be a JSON object")
+        return value
 
-    # Security headers
-    require_https = serializers.BooleanField(default=True)
-    custom_headers = serializers.DictField(default=dict)
+    def validate_headers(self, value):
+        """Validate headers"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Headers must be a JSON object")
 
+        # Validate header names and values
+        for key, val in value.items():
+            if not isinstance(key, str) or not isinstance(val, str):
+                raise serializers.ValidationError("Header names and values must be strings")
 
-class WebhookMonitoringSerializer(serializers.Serializer):
-    """
-    Webhook monitoring configuration serializer
-    """
-
-    enable_monitoring = serializers.BooleanField(default=True)
-    alert_on_failures = serializers.BooleanField(default=True)
-    failure_threshold = serializers.IntegerField(min_value=1, max_value=100, default=5)
-    alert_email = serializers.EmailField(required=False)
-
-    # Performance monitoring
-    enable_performance_alerts = serializers.BooleanField(default=False)
-    performance_threshold_ms = serializers.IntegerField(default=5000)
-
-    # Retention settings
-    log_retention_days = serializers.IntegerField(min_value=1, max_value=365, default=30)
-
-
-class WebhookResponseSerializer(serializers.Serializer):
-    """
-    Webhook response serializer for API responses
-    """
-
-    success = serializers.BooleanField()
-    message = serializers.CharField()
-    data = serializers.DictField(required=False)
-    errors = serializers.ListField(
-        child=serializers.CharField(),
-        required=False
-    )
-
-
-class WebhookValidationSerializer(serializers.Serializer):
-    """
-    Webhook validation result serializer
-    """
-
-    is_valid = serializers.BooleanField()
-    errors = serializers.ListField(
-        child=serializers.CharField(),
-        required=False
-    )
-    warnings = serializers.ListField(
-        child=serializers.CharField(),
-        required=False
-    )
-    suggestions = serializers.ListField(
-        child=serializers.CharField(),
-        required=False
-    )
+        return value

@@ -67,7 +67,7 @@ class WorkflowEngine:
 
     def __init__(self):
         self.executor_pool = ThreadPoolExecutor(
-            max_workers=settings.MAX_PARALLEL_EXECUTIONS
+            max_workers=getattr(settings, 'MAX_PARALLEL_EXECUTIONS', 10)
         )
         self.performance_monitor = PerformanceMonitor()
         self.node_executor = NodeExecutor()
@@ -123,18 +123,33 @@ class WorkflowEngine:
             logger.info(f"Workflow {workflow.name} executed successfully: {execution.id}")
 
         except Exception as e:
-            logger.error(f"Workflow execution failed: {str(e)}", exc_info=True)
-            execution.mark_failed(str(e), {'traceback': traceback.format_exc()})
+            logger.error(f"Workflow execution failed: {str(e)}")
+            execution.mark_failed(str(e), traceback.format_exc())
             raise
 
         finally:
+            # Clean up active execution tracking
+            self.active_executions.pop(str(execution.id), None)
             # Stop performance monitoring
             await self.performance_monitor.stop_execution_monitoring(execution.id)
 
-            # Cleanup
-            if str(execution.id) in self.active_executions:
-                del self.active_executions[str(execution.id)]
+        return execution
 
+    async def _create_execution_record(
+            self,
+            workflow: Workflow,
+            input_data: Dict[str, Any],
+            triggered_by_user_id: Optional[str],
+            trigger_source: str
+    ) -> WorkflowExecution:
+        """Create execution record in database"""
+        execution = WorkflowExecution.objects.create(
+            workflow=workflow,
+            triggered_by_user_id=triggered_by_user_id,
+            trigger_source=trigger_source,
+            input_data=input_data or {},
+            status='running'
+        )
         return execution
 
     async def _execute_workflow_async(
@@ -143,38 +158,32 @@ class WorkflowEngine:
             context: ExecutionContext,
             execution: WorkflowExecution
     ):
-        """Execute workflow nodes with parallel processing"""
+        """Execute workflow asynchronously with parallel node execution"""
 
         # Build execution graph
-        execution_graph = self._build_execution_graph(workflow.nodes, workflow.connections)
+        execution_graph = self._build_execution_graph(workflow.workflow_data)
 
-        # Get execution order with parallel groups
+        # Create execution plan with parallel stages
         execution_plan = self._create_execution_plan(execution_graph)
 
-        logger.info(f"Executing workflow with {len(execution_plan)} stages")
+        logger.info(f"Executing workflow {workflow.name} with {len(execution_plan)} stages")
 
         # Execute each stage
-        for stage_index, node_group in enumerate(execution_plan):
-            logger.debug(f"Executing stage {stage_index + 1}: {[n['id'] for n in node_group]}")
+        for stage_index, stage_nodes in enumerate(execution_plan):
+            logger.debug(f"Executing stage {stage_index + 1} with {len(stage_nodes)} nodes")
 
-            # Execute nodes in parallel within the stage
-            if len(node_group) == 1:
-                # Single node - execute directly
-                await self._execute_node(node_group[0], context, execution)
-            else:
-                # Multiple nodes - execute in parallel
-                await self._execute_nodes_parallel(node_group, context, execution)
+            # Execute nodes in parallel within this stage
+            await self._execute_nodes_parallel(stage_nodes, context, execution)
 
-            # Check for execution timeout
-            elapsed = (timezone.now() - context.start_time).total_seconds()
-            if elapsed > workflow.execution_timeout:
-                raise WorkflowTimeoutError(f"Workflow exceeded timeout of {workflow.execution_timeout}s")
+            logger.debug(f"Stage {stage_index + 1} completed successfully")
 
-    def _build_execution_graph(self, nodes: List[Dict], connections: List[Dict]) -> Dict[str, Dict]:
-        """Build a graph representation of the workflow"""
+    def _build_execution_graph(self, workflow_data: Dict[str, Any]) -> Dict[str, Dict]:
+        """Build execution graph from workflow data"""
+        nodes = workflow_data.get('nodes', [])
+        connections = workflow_data.get('connections', [])
+
+        # Initialize graph
         graph = {}
-
-        # Initialize nodes
         for node in nodes:
             graph[node['id']] = {
                 'node': node,
@@ -183,7 +192,7 @@ class WorkflowEngine:
                 'executed': False
             }
 
-        # Add connections
+        # Build dependencies from connections
         for connection in connections:
             source_id = connection['source']
             target_id = connection['target']
@@ -253,306 +262,156 @@ class WorkflowEngine:
             execution: WorkflowExecution
     ):
         """Execute a single node with comprehensive logging and error handling"""
-
         node_id = node['id']
-        node_name = node.get('name', node_id)
         node_type_name = node['type']
+        node_name = node.get('name', node_id)
+
+        start_time = time.time()
 
         # Create node execution log
-        log_entry = await self._create_node_log(execution, node, node_type_name)
-
-        try:
-            logger.debug(f"Executing node: {node_name} ({node_type_name})")
-
-            # Get node type configuration
-            node_type = await self._get_node_type(node_type_name)
-
-            # Prepare input data
-            input_data = await self._prepare_node_input(node, context)
-
-            # Execute node with timeout
-            start_time = time.time()
-
-            output_data = await asyncio.wait_for(
-                self.node_executor.execute_node(node_type, node.get('configuration', {}), input_data, context),
-                timeout=node.get('timeout', node_type.default_timeout)
-            )
-
-            execution_time = (time.time() - start_time) * 1000  # milliseconds
-
-            # Store output in context
-            self._store_node_output(node_id, output_data, context)
-
-            # Update log entry
-            log_entry.mark_completed(output_data)
-            log_entry.execution_time = execution_time
-            log_entry.save()
-
-            # Update execution statistics
-            execution.nodes_executed += 1
-            execution.save(update_fields=['nodes_executed'])
-
-            logger.debug(f"Node {node_name} completed in {execution_time:.2f}ms")
-
-        except asyncio.TimeoutError:
-            error_msg = f"Node {node_name} timed out"
-            logger.error(error_msg)
-
-            log_entry.mark_failed(error_msg, 'TimeoutError')
-            execution.nodes_failed += 1
-            execution.save(update_fields=['nodes_failed'])
-
-            # Check if node supports retry
-            if await self._should_retry_node(node, log_entry):
-                await self._retry_node(node, context, execution, log_entry)
-            else:
-                raise NodeExecutionError(error_msg)
-
-        except Exception as e:
-            error_msg = f"Node {node_name} failed: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-
-            log_entry.mark_failed(
-                error_msg,
-                type(e).__name__,
-                {'error': str(e)},
-                traceback.format_exc()
-            )
-            execution.nodes_failed += 1
-            execution.save(update_fields=['nodes_failed'])
-
-            # Check if node supports retry
-            if await self._should_retry_node(node, log_entry):
-                await self._retry_node(node, context, execution, log_entry)
-            else:
-                raise NodeExecutionError(error_msg) from e
-
-    async def _should_retry_node(self, node: Dict, log_entry: NodeExecutionLog) -> bool:
-        """Determine if a node should be retried"""
-        node_config = node.get('configuration', {})
-        max_retries = node_config.get('maxRetries', 3)
-
-        # Check if retries are enabled and we haven't exceeded the limit
-        return (
-                node_config.get('enableRetry', True) and
-                log_entry.retry_count < max_retries and
-                log_entry.error_type not in ['ValidationError', 'ConfigurationError']
+        node_log = NodeExecutionLog.objects.create(
+            execution=execution,
+            node_id=node_id,
+            node_name=node_name,
+            node_type_name=node_type_name,
+            status='running',
+            started_at=timezone.now()
         )
 
-    async def _retry_node(
-            self,
-            node: Dict,
-            context: ExecutionContext,
-            execution: WorkflowExecution,
-            original_log: NodeExecutionLog
-    ):
-        """Retry node execution with exponential backoff"""
-        retry_delay = node.get('configuration', {}).get('retryDelay', 60)
-        retry_count = original_log.retry_count + 1
+        try:
+            # Get node type
+            node_type = NodeType.objects.get(name=node_type_name, is_active=True)
 
-        # Exponential backoff
-        delay = retry_delay * (2 ** (retry_count - 1))
+            # Prepare input data for this node
+            input_data = self._prepare_node_input(node, context)
 
-        logger.info(f"Retrying node {node.get('name')} in {delay} seconds (attempt {retry_count})")
+            # Get node configuration
+            configuration = node.get('configuration', {})
 
-        await asyncio.sleep(delay)
+            # Execute node
+            result = await self.node_executor.execute_node(
+                node_type=node_type,
+                configuration=configuration,
+                input_data=input_data,
+                context=context
+            )
 
-        # Create new log entry for retry
-        log_entry = await self._create_node_log(execution, node, node['type'])
-        log_entry.retry_count = retry_count
-        log_entry.is_retry = True
-        log_entry.save()
+            # Store node output in context
+            context.set_node_output(node_id, 'main', result)
 
-        # Retry execution
-        await self._execute_node(node, context, execution)
+            # Update execution log
+            execution_time = (time.time() - start_time) * 1000  # milliseconds
+            node_log.mark_completed(result, execution_time)
 
-    async def _prepare_node_input(self, node: Dict, context: ExecutionContext) -> Dict[str, Any]:
+            logger.debug(f"Node {node_name} executed successfully in {execution_time:.2f}ms")
+
+            return result
+
+        except Exception as e:
+            execution_time = (time.time() - start_time) * 1000
+            error_details = {
+                'error': str(e),
+                'traceback': traceback.format_exc(),
+                'node_id': node_id,
+                'node_type': node_type_name
+            }
+
+            # Update execution log with error
+            node_log.mark_failed(str(e), error_details)
+
+            logger.error(f"Node {node_name} execution failed: {str(e)}")
+            raise NodeExecutionError(f"Node {node_name} execution failed: {str(e)}") from e
+
+    def _prepare_node_input(self, node: Dict, context: ExecutionContext) -> Dict[str, Any]:
         """Prepare input data for node execution"""
-        input_data = {}
+        node_id = node['id']
 
-        # Get input mappings from node configuration
-        input_mappings = node.get('inputMappings', {})
+        # Start with workflow input data
+        input_data = context.input_data.copy()
 
-        for input_name, mapping in input_mappings.items():
-            if isinstance(mapping, str):
-                # Simple reference to another node's output
-                if '.' in mapping:
-                    node_ref, output_name = mapping.split('.', 1)
-                    input_data[input_name] = context.get_node_output(node_ref, output_name)
-                else:
-                    # Reference to workflow variable
-                    input_data[input_name] = context.get_variable(mapping)
-            elif isinstance(mapping, dict):
-                # Complex mapping with transformations
-                input_data[input_name] = await self._process_input_mapping(mapping, context)
+        # Add outputs from previous nodes based on connections
+        # This would need to be enhanced based on your specific connection logic
+
+        # Add any node-specific input configuration
+        if 'input' in node:
+            input_data.update(node['input'])
 
         return input_data
 
-    async def _process_input_mapping(self, mapping: Dict, context: ExecutionContext) -> Any:
-        """Process complex input mappings with transformations"""
-        if 'source' in mapping:
-            source = mapping['source']
-            if '.' in source:
-                node_ref, output_name = source.split('.', 1)
-                value = context.get_node_output(node_ref, output_name)
-            else:
-                value = context.get_variable(source)
-
-            # Apply transformations
-            transformations = mapping.get('transformations', [])
-            for transform in transformations:
-                value = await self._apply_transformation(value, transform)
-
-            return value
-
-        return mapping.get('default')
-
-    async def _apply_transformation(self, value: Any, transform: Dict) -> Any:
-        """Apply data transformation"""
-        transform_type = transform.get('type')
-
-        if transform_type == 'json_path':
-            # JSONPath extraction
-            import jsonpath_ng
-            expr = jsonpath_ng.parse(transform['expression'])
-            matches = [match.value for match in expr.find(value)]
-            return matches[0] if matches else None
-
-        elif transform_type == 'string_format':
-            # String formatting
-            return transform['template'].format(value=value)
-
-        elif transform_type == 'date_format':
-            # Date formatting
-            from datetime import datetime
-            if isinstance(value, str):
-                value = datetime.fromisoformat(value)
-            return value.strftime(transform['format'])
-
-        # Add more transformation types as needed
-        return value
-
-    def _store_node_output(self, node_id: str, output_data: Dict[str, Any], context: ExecutionContext):
-        """Store node output in execution context"""
-        for output_name, value in output_data.items():
-            context.set_node_output(node_id, output_name, value)
-
-    async def _create_execution_record(
-            self,
-            workflow: Workflow,
-            input_data: Dict[str, Any],
-            triggered_by_user_id: Optional[str],
-            trigger_source: str
-    ) -> WorkflowExecution:
-        """Create workflow execution record"""
-
-        execution = WorkflowExecution.objects.create(
-            workflow=workflow,
-            trigger_source=trigger_source,
-            triggered_by_id=triggered_by_user_id,
-            input_data=input_data or {},
-            status='running'
-        )
-
-        # Track active execution
-        self.active_executions[str(execution.id)] = None
-
-        return execution
-
-    async def _create_node_log(
-            self,
-            execution: WorkflowExecution,
-            node: Dict,
-            node_type_name: str
-    ) -> NodeExecutionLog:
-        """Create node execution log entry"""
-
-        try:
-            node_type = await self._get_node_type(node_type_name)
-        except NodeType.DoesNotExist:
-            # Create a placeholder for unknown node types
-            node_type = None
-
-        log_entry = NodeExecutionLog.objects.create(
-            execution=execution,
-            node_id=node['id'],
-            node_type=node_type,
-            node_name=node.get('name', node['id']),
-            status='running',
-            input_data={}
-        )
-
-        return log_entry
-
-    async def _get_node_type(self, node_type_name: str) -> NodeType:
-        """Get node type by name with caching"""
-        cache_key = f"node_type_{node_type_name}"
-
-        if cache_key in self._execution_cache:
-            return self._execution_cache[cache_key]
-
-        try:
-            node_type = await NodeType.objects.aget(name=node_type_name, is_active=True)
-            self._execution_cache[cache_key] = node_type
-            return node_type
-        except NodeType.DoesNotExist:
-            raise NodeExecutionError(f"Node type '{node_type_name}' not found or inactive")
-
     async def cancel_execution(self, execution_id: str) -> bool:
         """Cancel a running workflow execution"""
-
         if execution_id in self.active_executions:
             task = self.active_executions[execution_id]
-            if task and not task.done():
-                task.cancel()
+            task.cancel()
+
+            try:
+                await task
+            except asyncio.CancelledError:
+                logger.info(f"Workflow execution {execution_id} cancelled successfully")
 
                 # Update execution record
                 try:
-                    execution = await WorkflowExecution.objects.aget(id=execution_id)
-                    execution.status = 'cancelled'
-                    execution.completed_at = timezone.now()
-                    await execution.asave()
+                    execution = WorkflowExecution.objects.get(id=execution_id)
+                    execution.mark_cancelled()
                 except WorkflowExecution.DoesNotExist:
                     pass
 
-                logger.info(f"Cancelled execution: {execution_id}")
                 return True
 
         return False
 
     def get_execution_status(self, execution_id: str) -> Dict[str, Any]:
-        """Get current execution status"""
+        """Get current status of workflow execution"""
+        try:
+            execution = WorkflowExecution.objects.get(id=execution_id)
 
-        if execution_id in self.active_executions:
-            task = self.active_executions[execution_id]
-            if task:
-                return {
-                    'status': 'running',
-                    'is_done': task.done(),
-                    'is_cancelled': task.cancelled(),
-                }
+            status_info = {
+                'id': str(execution.id),
+                'status': execution.status,
+                'started_at': execution.started_at,
+                'completed_at': execution.completed_at,
+                'progress': self._calculate_execution_progress(execution),
+                'is_active': execution_id in self.active_executions
+            }
 
-        return {'status': 'unknown'}
+            if execution.status == 'failed':
+                status_info['error'] = execution.error_message
 
-    async def cleanup_old_executions(self, days: int = 30):
-        """Cleanup old execution records and logs"""
+            return status_info
 
-        cutoff_date = timezone.now() - timedelta(days=days)
+        except WorkflowExecution.DoesNotExist:
+            return {'error': 'Execution not found'}
 
-        # Delete old execution logs
-        deleted_logs = await NodeExecutionLog.objects.filter(
-            started_at__lt=cutoff_date
-        ).adelete()
+    def _calculate_execution_progress(self, execution: WorkflowExecution) -> Dict[str, Any]:
+        """Calculate execution progress based on node logs"""
+        node_logs = NodeExecutionLog.objects.filter(execution=execution)
 
-        # Delete old executions
-        deleted_executions = await WorkflowExecution.objects.filter(
-            started_at__lt=cutoff_date
-        ).adelete()
+        total_nodes = node_logs.count()
+        completed_nodes = node_logs.filter(status__in=['completed', 'failed']).count()
 
-        logger.info(f"Cleaned up {deleted_executions[0]} executions and {deleted_logs[0]} logs")
+        if total_nodes == 0:
+            return {'percentage': 0, 'nodes_completed': 0, 'total_nodes': 0}
 
-        return deleted_executions[0], deleted_logs[0]
+        percentage = (completed_nodes / total_nodes) * 100
 
+        return {
+            'percentage': round(percentage, 2),
+            'nodes_completed': completed_nodes,
+            'total_nodes': total_nodes
+        }
 
-# Global workflow engine instance
-workflow_engine = WorkflowEngine()
+    async def cleanup_old_executions(self, days_old: int = 30):
+        """Clean up old execution records"""
+        cutoff_date = timezone.now() - timedelta(days=days_old)
+
+        old_executions = WorkflowExecution.objects.filter(
+            started_at__lt=cutoff_date,
+            status__in=['completed', 'failed', 'cancelled']
+        )
+
+        count = old_executions.count()
+        old_executions.delete()
+
+        logger.info(f"Cleaned up {count} old workflow executions")
+
+        return count

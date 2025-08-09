@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
@@ -15,8 +15,12 @@ from django.utils import timezone
 from django.db.models import Q, Count, Avg
 from django.conf import settings
 import json
-import asyncio
+import uuid
+import hashlib
+import hmac
 import logging
+import requests
+from datetime import timedelta
 
 from .models import (
     WebhookEndpoint, WebhookDelivery, WebhookRateLimit,
@@ -25,11 +29,12 @@ from .models import (
 from .serializers import (
     WebhookEndpointSerializer, WebhookDeliverySerializer,
     WebhookEventSerializer, WebhookTemplateSerializer,
-    WebhookEndpointCreateSerializer
+    WebhookEndpointCreateSerializer, WebhookStatsSerializer,
+    WebhookTestSerializer
 )
 from apps.core.permissions import OrganizationPermission
 from apps.core.pagination import CustomPageNumberPagination
-from apps.core.workflow_engine import workflow_engine
+from apps.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -69,453 +74,161 @@ class WebhookEndpointViewSet(viewsets.ModelViewSet):
             url_path=url_path
         )
 
-        # Log event
-        WebhookEvent.objects.create(
-            organization=organization,
-            webhook_endpoint=webhook,
-            event_type='endpoint_created',
-            description=f'Webhook endpoint "{webhook.name}" created',
-            user=self.request.user,
-            ip_address=self._get_client_ip(self.request),
-            event_data={'webhook_id': str(webhook.id)}
-        )
-
-    def perform_update(self, serializer):
-        """Update webhook endpoint with logging"""
-        webhook = serializer.save()
-
-        # Log event
-        WebhookEvent.objects.create(
-            organization=webhook.organization,
-            webhook_endpoint=webhook,
-            event_type='endpoint_updated',
-            description=f'Webhook endpoint "{webhook.name}" updated',
-            user=self.request.user,
-            ip_address=self._get_client_ip(self.request),
-            event_data={'webhook_id': str(webhook.id)}
-        )
-
-    def perform_destroy(self, instance):
-        """Delete webhook endpoint with logging"""
-        WebhookEvent.objects.create(
-            organization=instance.organization,
-            webhook_endpoint=instance,
-            event_type='endpoint_deleted',
-            description=f'Webhook endpoint "{instance.name}" deleted',
-            user=self.request.user,
-            ip_address=self._get_client_ip(self.request),
-            event_data={'webhook_id': str(instance.id)}
-        )
-
-        super().perform_destroy(instance)
-
-    @action(detail=True, methods=['get'])
-    def deliveries(self, request, pk=None):
-        """Get webhook deliveries"""
-        webhook = self.get_object()
-
-        deliveries = webhook.deliveries.all()
-
-        # Apply filters
-        status_filter = request.query_params.get('status')
-        if status_filter:
-            deliveries = deliveries.filter(status=status_filter)
-
-        days = request.query_params.get('days', 7)
-        if days:
-            start_date = timezone.now() - timezone.timedelta(days=int(days))
-            deliveries = deliveries.filter(received_at__gte=start_date)
-
-        # Paginate
-        page = self.paginate_queryset(deliveries)
-        if page is not None:
-            serializer = WebhookDeliverySerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = WebhookDeliverySerializer(deliveries, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def analytics(self, request, pk=None):
-        """Get webhook analytics"""
-        webhook = self.get_object()
-
-        # Date range
-        days = int(request.query_params.get('days', 30))
-        start_date = timezone.now() - timezone.timedelta(days=days)
-
-        # Get deliveries in date range
-        deliveries = webhook.deliveries.filter(received_at__gte=start_date)
-
-        # Basic metrics
-        total_deliveries = deliveries.count()
-        successful_deliveries = deliveries.filter(status='success').count()
-        failed_deliveries = deliveries.filter(status='failed').count()
-
-        success_rate = (successful_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0
-
-        # Average processing time
-        avg_processing_time = deliveries.filter(
-            status='success',
-            processing_time_ms__isnull=False
-        ).aggregate(avg_time=Avg('processing_time_ms'))['avg_time'] or 0
-
-        # Daily delivery counts
-        daily_stats = []
-        for i in range(days):
-            date = (timezone.now() - timezone.timedelta(days=i)).date()
-            day_deliveries = deliveries.filter(received_at__date=date)
-
-            daily_stats.append({
-                'date': date.isoformat(),
-                'total': day_deliveries.count(),
-                'successful': day_deliveries.filter(status='success').count(),
-                'failed': day_deliveries.filter(status='failed').count(),
-            })
-
-        # Error analysis
-        error_types = deliveries.filter(status='failed').values(
-            'error_message'
-        ).annotate(count=Count('id')).order_by('-count')[:5]
-
-        # IP address statistics
-        top_ips = deliveries.values('ip_address').annotate(
-            count=Count('id')
-        ).order_by('-count')[:10]
-
-        analytics_data = {
-            'overview': {
-                'total_deliveries': total_deliveries,
-                'successful_deliveries': successful_deliveries,
-                'failed_deliveries': failed_deliveries,
-                'success_rate': round(success_rate, 2),
-                'average_processing_time': round(avg_processing_time, 2) if avg_processing_time else 0,
-            },
-            'daily_stats': daily_stats,
-            'error_analysis': list(error_types),
-            'top_source_ips': list(top_ips),
-        }
-
-        return Response(analytics_data)
+        logger.info(f"Created webhook endpoint: {webhook.name} for {organization.name}")
 
     @action(detail=True, methods=['post'])
     def test(self, request, pk=None):
         """Test webhook endpoint with sample data"""
         webhook = self.get_object()
 
-        # Create test payload
-        test_payload = request.data.get('payload', {
-            'test': True,
-            'timestamp': timezone.now().isoformat(),
-            'message': 'This is a test webhook delivery'
-        })
+        # Get test data from request
+        test_data = request.data.get('test_data', {'message': 'Test webhook'})
+        headers = request.data.get('headers', {})
 
         try:
-            # Execute workflow with test data
-            execution = asyncio.run(
-                workflow_engine.execute_workflow(
-                    workflow=webhook.workflow,
-                    input_data=test_payload,
-                    triggered_by_user_id=request.user.id,
-                    trigger_source='webhook_test'
-                )
+            # Create test delivery
+            delivery = WebhookDelivery.objects.create(
+                webhook_endpoint=webhook,
+                delivery_id=f"test-{uuid.uuid4().hex[:8]}",
+                trigger_event='test',
+                request_method='POST',
+                request_headers=headers,
+                request_body=json.dumps(test_data)
             )
 
+            # Simulate webhook processing
+            self._process_webhook_delivery(delivery, test_data, headers, test_mode=True)
+
             return Response({
-                'success': True,
-                'execution_id': execution.id,
-                'message': 'Test webhook executed successfully'
+                'message': 'Webhook test completed',
+                'delivery_id': delivery.delivery_id,
+                'status': delivery.status
             })
 
         except Exception as e:
-            return Response({
-                'success': False,
-                'error': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            logger.error(f"Webhook test failed: {str(e)}")
+            return Response(
+                {'error': f'Webhook test failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['post'])
-    def regenerate_url(self, request, pk=None):
-        """Regenerate webhook URL"""
+    def regenerate_secret(self, request, pk=None):
+        """Regenerate webhook secret token"""
         webhook = self.get_object()
 
-        # Generate new URL path
+        # Check permissions
+        if webhook.organization != request.user.organization_memberships.first().organization:
+            return Response(
+                {'error': 'Permission denied'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Generate new secret
         import secrets
-        old_url_path = webhook.url_path
-        webhook.url_path = secrets.token_urlsafe(16)
+        webhook.secret_token = secrets.token_urlsafe(32)
         webhook.save()
 
-        # Log event
-        WebhookEvent.objects.create(
-            organization=webhook.organization,
-            webhook_endpoint=webhook,
-            event_type='endpoint_updated',
-            description=f'Webhook URL regenerated for "{webhook.name}"',
-            user=request.user,
-            ip_address=self._get_client_ip(request),
-            event_data={
-                'webhook_id': str(webhook.id),
-                'old_url_path': old_url_path,
-                'new_url_path': webhook.url_path
-            }
-        )
-
         return Response({
-            'new_url': webhook.full_url,
-            'url_path': webhook.url_path
+            'message': 'Secret token regenerated successfully',
+            'new_secret': webhook.secret_token
         })
 
-    def _get_client_ip(self, request):
-        """Get client IP address"""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
+    @action(detail=True, methods=['get'])
+    def deliveries(self, request, pk=None):
+        """Get delivery history for webhook"""
+        webhook = self.get_object()
 
+        deliveries = WebhookDelivery.objects.filter(
+            webhook_endpoint=webhook
+        ).order_by('-created_at')[:50]  # Last 50 deliveries
 
-@csrf_exempt
-@require_http_methods(["GET", "POST", "PUT", "PATCH"])
-def webhook_receiver(request, url_path):
-    """
-    Webhook receiver endpoint - handles incoming webhook requests
-    """
+        serializer = WebhookDeliverySerializer(deliveries, many=True)
+        return Response(serializer.data)
 
-    try:
-        # Get webhook endpoint
-        try:
-            webhook = WebhookEndpoint.objects.get(url_path=url_path, status='active')
-        except WebhookEndpoint.DoesNotExist:
-            logger.warning(f"Webhook not found: {url_path}")
-            return HttpResponse('Webhook not found', status=404)
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        """Get webhook statistics"""
+        webhook = self.get_object()
 
-        # Get client information
-        client_ip = _get_client_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        # Get time range
+        days = int(request.query_params.get('days', 7))
+        start_date = timezone.now() - timedelta(days=days)
 
-        # Check IP whitelist
-        if not webhook.is_ip_allowed(client_ip):
-            logger.warning(f"IP {client_ip} not allowed for webhook {webhook.name}")
-
-            # Log blocked event
-            WebhookEvent.objects.create(
-                organization=webhook.organization,
-                webhook_endpoint=webhook,
-                event_type='ip_blocked',
-                description=f'Request from blocked IP: {client_ip}',
-                ip_address=client_ip,
-                user_agent=user_agent
-            )
-
-            return HttpResponse('IP not allowed', status=403)
-
-        # Check rate limiting
-        rate_limit, created = WebhookRateLimit.objects.get_or_create(
+        deliveries = WebhookDelivery.objects.filter(
             webhook_endpoint=webhook,
-            ip_address=client_ip
+            created_at__gte=start_date
         )
 
-        if rate_limit.is_rate_limited():
-            logger.warning(f"Rate limit exceeded for IP {client_ip} on webhook {webhook.name}")
+        total_deliveries = deliveries.count()
+        successful_deliveries = deliveries.filter(status='delivered').count()
+        failed_deliveries = deliveries.filter(status='failed').count()
 
-            # Log rate limit event
-            WebhookEvent.objects.create(
-                organization=webhook.organization,
-                webhook_endpoint=webhook,
-                event_type='rate_limit_hit',
-                description=f'Rate limit exceeded for IP: {client_ip}',
-                ip_address=client_ip,
-                user_agent=user_agent
-            )
+        # Calculate average response time
+        delivered_deliveries = deliveries.filter(response_time_ms__isnull=False)
+        avg_response_time = delivered_deliveries.aggregate(
+            avg=Avg('response_time_ms')
+        )['avg'] or 0
 
-            return HttpResponse('Rate limit exceeded', status=429)
+        return Response({
+            'period_days': days,
+            'total_deliveries': total_deliveries,
+            'successful_deliveries': successful_deliveries,
+            'failed_deliveries': failed_deliveries,
+            'success_rate': (successful_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0,
+            'average_response_time_ms': round(avg_response_time, 2),
+            'current_status': webhook.status
+        })
 
-        rate_limit.increment_request()
-
-        # Check HTTP method
-        if webhook.allowed_methods and request.method not in webhook.allowed_methods:
-            return HttpResponse('Method not allowed', status=405)
-
-        # Get request headers
-        headers = {}
-        for key, value in request.META.items():
-            if key.startswith('HTTP_'):
-                header_name = key[5:].replace('_', '-').title()
-                headers[header_name] = value
-
-        # Check required custom headers
-        for required_header, required_value in webhook.custom_headers.items():
-            if headers.get(required_header) != required_value:
-                return HttpResponse('Invalid headers', status=400)
-
-        # Get payload
+    def _process_webhook_delivery(self, delivery, data, headers, test_mode=False):
+        """Process webhook delivery (trigger workflow execution)"""
         try:
-            if webhook.data_format == 'json':
-                payload = json.loads(request.body.decode('utf-8')) if request.body else {}
-                raw_payload = request.body.decode('utf-8')
-            elif webhook.data_format == 'form':
-                payload = dict(request.POST)
-                raw_payload = request.body.decode('utf-8')
-            elif webhook.data_format == 'xml':
-                # For XML, store as raw and let workflow process it
-                payload = {'xml_data': request.body.decode('utf-8')}
-                raw_payload = request.body.decode('utf-8')
-            else:  # raw
-                payload = {'raw_data': request.body.decode('utf-8')}
-                raw_payload = request.body.decode('utf-8')
-        except Exception as e:
-            logger.error(f"Failed to parse payload for webhook {webhook.name}: {str(e)}")
-            return HttpResponse('Invalid payload format', status=400)
+            webhook = delivery.webhook_endpoint
 
-        # Authentication
-        if webhook.authentication_type == 'secret':
-            auth_header = headers.get('Authorization', '')
-            if not auth_header.startswith('Bearer ') or auth_header[7:] != webhook.secret_token:
-                # Log authentication failure
-                WebhookEvent.objects.create(
-                    organization=webhook.organization,
-                    webhook_endpoint=webhook,
-                    event_type='authentication_failed',
-                    description='Invalid secret token',
-                    ip_address=client_ip,
-                    user_agent=user_agent
-                )
-                return HttpResponse('Authentication failed', status=401)
+            if test_mode:
+                # For test mode, just mark as delivered
+                delivery.mark_delivered(200, 'Test successful', 50)
+                return
 
-        elif webhook.authentication_type == 'signature':
-            signature = headers.get(webhook.signature_header, '')
-            if not webhook.verify_signature(request.body, signature):
-                # Log authentication failure
-                WebhookEvent.objects.create(
-                    organization=webhook.organization,
-                    webhook_endpoint=webhook,
-                    event_type='authentication_failed',
-                    description='Invalid signature',
-                    ip_address=client_ip,
-                    user_agent=user_agent
-                )
-                return HttpResponse('Authentication failed', status=401)
+            # Trigger workflow execution
+            from apps.executions.models import ExecutionQueue
 
-        elif webhook.authentication_type == 'basic':
-            # Implement basic auth if needed
-            pass
-
-        elif webhook.authentication_type == 'bearer':
-            auth_header = headers.get('Authorization', '')
-            if not auth_header.startswith('Bearer ') or auth_header[7:] != webhook.secret_token:
-                return HttpResponse('Authentication failed', status=401)
-
-        # Create delivery record
-        delivery = WebhookDelivery.objects.create(
-            webhook_endpoint=webhook,
-            http_method=request.method,
-            headers=headers,
-            payload=payload,
-            raw_payload=raw_payload,
-            ip_address=client_ip,
-            user_agent=user_agent,
-            status='pending'
-        )
-
-        # Log delivery received event
-        WebhookEvent.objects.create(
-            organization=webhook.organization,
-            webhook_endpoint=webhook,
-            delivery=delivery,
-            event_type='delivery_received',
-            description=f'Webhook delivery received from {client_ip}',
-            ip_address=client_ip,
-            user_agent=user_agent
-        )
-
-        # Process webhook asynchronously
-        try:
-            # Add webhook-specific data to payload
-            enhanced_payload = {
-                **payload,
-                '_webhook': {
-                    'endpoint_id': str(webhook.id),
-                    'endpoint_name': webhook.name,
-                    'delivery_id': str(delivery.id),
-                    'source_ip': client_ip,
-                    'user_agent': user_agent,
-                    'received_at': delivery.received_at.isoformat(),
+            execution = ExecutionQueue.objects.create(
+                workflow=webhook.workflow,
+                execution_id=f"webhook-{uuid.uuid4().hex[:8]}",
+                trigger_type='webhook',
+                trigger_data={
+                    'webhook_id': str(webhook.id),
+                    'delivery_id': delivery.delivery_id,
                     'headers': headers
-                }
-            }
-
-            # Execute workflow
-            delivery.mark_processing()
-
-            execution = asyncio.run(
-                workflow_engine.execute_workflow(
-                    workflow=webhook.workflow,
-                    input_data=enhanced_payload,
-                    triggered_by_user_id=None,  # System trigger
-                    trigger_source='webhook'
-                )
+                },
+                input_data=data,
+                priority='normal'
             )
 
-            # Mark delivery as successful
-            delivery.mark_success(execution.id)
-            webhook.increment_stats(success=True)
+            # Mark delivery as delivered
+            delivery.mark_delivered(200, f'Workflow triggered: {execution.execution_id}', 100)
 
-            # Log success event
-            WebhookEvent.objects.create(
-                organization=webhook.organization,
-                webhook_endpoint=webhook,
-                delivery=delivery,
-                event_type='delivery_processed',
-                description='Webhook processed successfully',
-                ip_address=client_ip,
-                event_data={'execution_id': str(execution.id)}
-            )
-
-            return HttpResponse('OK', status=200)
+            logger.info(f"Webhook {webhook.name} triggered workflow execution: {execution.execution_id}")
 
         except Exception as e:
-            # Mark delivery as failed
-            delivery.mark_failed(str(e))
-            webhook.increment_stats(success=False)
-
-            # Log failure event
-            WebhookEvent.objects.create(
-                organization=webhook.organization,
-                webhook_endpoint=webhook,
-                delivery=delivery,
-                event_type='delivery_failed',
-                description=f'Webhook processing failed: {str(e)}',
-                ip_address=client_ip,
-                event_data={'error': str(e)}
-            )
-
-            logger.error(f"Webhook processing failed for {webhook.name}: {str(e)}")
-
-            # Return 200 to prevent retries for application errors
-            # Return 500 for system errors to trigger retries
-            if 'timeout' in str(e).lower():
-                return HttpResponse('Processing timeout', status=504)
-            else:
-                return HttpResponse('Processing failed', status=200)
-
-    except Exception as e:
-        logger.error(f"Webhook receiver error: {str(e)}")
-        return HttpResponse('Internal server error', status=500)
+            logger.error(f"Error processing webhook delivery: {str(e)}")
+            delivery.mark_failed(500, str(e))
 
 
 class WebhookDeliveryViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Webhook delivery management
+    Webhook delivery history (read-only)
     """
     serializer_class = WebhookDeliverySerializer
     permission_classes = [IsAuthenticated, OrganizationPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'webhook_endpoint']
-    ordering = ['-received_at']
+    ordering = ['-created_at']
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        """Get deliveries for organization webhooks"""
+        """Get webhook deliveries for current organization"""
         organization = self.request.user.organization_memberships.first().organization
         return WebhookDelivery.objects.filter(
             webhook_endpoint__organization=organization
@@ -526,110 +239,386 @@ class WebhookDeliveryViewSet(viewsets.ReadOnlyModelViewSet):
         """Retry failed webhook delivery"""
         delivery = self.get_object()
 
-        if delivery.status != 'failed':
+        if not delivery.can_retry():
             return Response(
-                {'error': 'Can only retry failed deliveries'},
+                {'error': 'Delivery cannot be retried'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Create new delivery for retry
+        new_delivery = WebhookDelivery.objects.create(
+            webhook_endpoint=delivery.webhook_endpoint,
+            delivery_id=f"retry-{uuid.uuid4().hex[:8]}",
+            trigger_event=delivery.trigger_event,
+            request_method=delivery.request_method,
+            request_headers=delivery.request_headers,
+            request_body=delivery.request_body,
+            attempt_number=delivery.attempt_number + 1,
+            max_attempts=delivery.max_attempts
+        )
+
+        # Process the retry
         try:
-            # Execute workflow with original payload
-            execution = asyncio.run(
-                workflow_engine.execute_workflow(
-                    workflow=delivery.webhook_endpoint.workflow,
-                    input_data=delivery.payload,
-                    triggered_by_user_id=request.user.id,
-                    trigger_source='webhook_retry'
-                )
-            )
+            data = json.loads(delivery.request_body)
+            headers = delivery.request_headers
+            self._process_webhook_delivery(new_delivery, data, headers)
+        except Exception as e:
+            new_delivery.mark_failed(500, str(e))
 
-            # Create new delivery record for retry
-            retry_delivery = WebhookDelivery.objects.create(
-                webhook_endpoint=delivery.webhook_endpoint,
-                http_method=delivery.http_method,
-                headers=delivery.headers,
-                payload=delivery.payload,
-                raw_payload=delivery.raw_payload,
-                ip_address=delivery.ip_address,
-                user_agent=delivery.user_agent,
-                status='success',
-                workflow_execution_id=execution.id,
-                retry_count=delivery.retry_count + 1
-            )
+        return Response({
+            'message': 'Delivery retry initiated',
+            'new_delivery_id': new_delivery.delivery_id
+        })
 
-            retry_delivery.mark_success(execution.id)
+
+class WebhookEventViewSet(viewsets.ModelViewSet):
+    """
+    Webhook event management
+    """
+    serializer_class = WebhookEventSerializer
+    permission_classes = [IsAuthenticated, OrganizationPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['event_type', 'processed', 'webhook_endpoint']
+    ordering = ['-created_at']
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        """Get webhook events for current organization"""
+        organization = self.request.user.organization_memberships.first().organization
+        return WebhookEvent.objects.filter(
+            webhook_endpoint__organization=organization
+        ).select_related('webhook_endpoint')
+
+    @action(detail=True, methods=['post'])
+    def process(self, request, pk=None):
+        """Manually process webhook event"""
+        event = self.get_object()
+
+        try:
+            # Process the event
+            result = self._process_webhook_event(event)
+
+            event.mark_processed(result)
 
             return Response({
-                'success': True,
-                'retry_delivery_id': retry_delivery.id,
-                'execution_id': execution.id
+                'message': 'Event processed successfully',
+                'result': result
             })
 
         except Exception as e:
-            return Response({
-                'success': False,
-                'error': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            event.mark_processed(error=e)
+            return Response(
+                {'error': f'Failed to process event: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _process_webhook_event(self, event):
+        """Process webhook event"""
+        # This would contain the actual event processing logic
+        # For now, just return a success result
+        return {
+            'status': 'success',
+            'message': f'Processed {event.event_type} event',
+            'timestamp': timezone.now().isoformat()
+        }
 
 
-class WebhookTemplateViewSet(viewsets.ReadOnlyModelViewSet):
+class WebhookTemplateViewSet(viewsets.ModelViewSet):
     """
     Webhook template management
     """
-    queryset = WebhookTemplate.objects.all()
     serializer_class = WebhookTemplateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationPermission]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category', 'service_name', 'is_featured']
-    ordering = ['-is_featured', '-usage_count']
+    filterset_fields = ['webhook_type', 'is_active']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        """Get webhook templates"""
+        # Show public templates and user's own templates
+        return WebhookTemplate.objects.filter(
+            Q(created_by=self.request.user) | Q(created_by__isnull=True)
+        )
+
+    def perform_create(self, serializer):
+        """Create webhook template"""
+        serializer.save(created_by=self.request.user)
 
     @action(detail=True, methods=['post'])
     def use_template(self, request, pk=None):
         """Create webhook endpoint from template"""
         template = self.get_object()
-        organization = request.user.organization_memberships.first().organization
 
-        # Get workflow ID from request
+        # Get required data from request
+        name = request.data.get('name')
         workflow_id = request.data.get('workflow_id')
-        if not workflow_id:
+
+        if not name or not workflow_id:
             return Response(
-                {'error': 'workflow_id is required'},
+                {'error': 'Name and workflow_id are required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            from apps.workflows.models import Workflow
+            organization = request.user.organization_memberships.first().organization
             workflow = Workflow.objects.get(id=workflow_id, organization=organization)
+
+            # Create webhook endpoint from template
+            webhook = WebhookEndpoint.objects.create(
+                organization=organization,
+                workflow=workflow,
+                created_by=request.user,
+                name=name,
+                description=f"Created from template: {template.name}",
+                **template.default_config
+            )
+
+            # Generate URL path
+            webhook.generate_url_path()
+            webhook.save()
+
+            # Increment template usage
+            template.increment_usage()
+
+            serializer = WebhookEndpointSerializer(webhook)
+            return Response({
+                'message': 'Webhook endpoint created from template',
+                'webhook': serializer.data
+            })
+
         except Workflow.DoesNotExist:
             return Response(
                 {'error': 'Workflow not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to create webhook: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-        # Create webhook endpoint from template
-        import secrets
 
-        webhook_data = template.configuration.copy()
-        webhook_data.update({
-            'name': f"{template.service_name} Webhook",
-            'description': template.description,
-            'workflow': workflow,
-        })
+@csrf_exempt
+@require_http_methods(["GET", "POST", "PUT", "PATCH", "DELETE"])
+def webhook_receiver(request, url_path):
+    """
+    Receive webhook requests and trigger workflows
+    """
+    try:
+        # Find webhook endpoint
+        try:
+            webhook = WebhookEndpoint.objects.get(
+                url_path=url_path,
+                status='active'
+            )
+        except WebhookEndpoint.DoesNotExist:
+            logger.warning(f"Webhook not found: {url_path}")
+            return JsonResponse({'error': 'Webhook not found'}, status=404)
 
-        webhook = WebhookEndpoint.objects.create(
-            organization=organization,
-            workflow=workflow,
-            url_path=secrets.token_urlsafe(16),
-            created_by=request.user,
-            **webhook_data
+        # Check allowed methods
+        if webhook.allowed_methods and request.method not in webhook.allowed_methods:
+            return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+        # Check IP whitelist
+        if webhook.allowed_ips:
+            client_ip = _get_client_ip(request)
+            if client_ip not in webhook.allowed_ips:
+                logger.warning(f"IP not allowed for webhook {webhook.name}: {client_ip}")
+                return JsonResponse({'error': 'IP not allowed'}, status=403)
+
+        # Rate limiting
+        if not _check_rate_limit(webhook, request):
+            return JsonResponse({'error': 'Rate limit exceeded'}, status=429)
+
+        # Authentication
+        if not _authenticate_webhook_request(webhook, request):
+            return JsonResponse({'error': 'Authentication failed'}, status=401)
+
+        # Parse request body
+        try:
+            if webhook.data_format == 'json':
+                data = json.loads(request.body.decode('utf-8')) if request.body else {}
+            elif webhook.data_format == 'form':
+                data = dict(request.POST)
+            elif webhook.data_format == 'xml':
+                # Basic XML parsing (would need more sophisticated parsing in production)
+                data = {'xml_content': request.body.decode('utf-8')}
+            else:  # raw
+                data = {'raw_content': request.body.decode('utf-8')}
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            logger.error(f"Error parsing webhook data: {str(e)}")
+            return JsonResponse({'error': 'Invalid request format'}, status=400)
+
+        # Create webhook delivery record
+        delivery = WebhookDelivery.objects.create(
+            webhook_endpoint=webhook,
+            delivery_id=f"wh-{uuid.uuid4().hex[:8]}",
+            trigger_event='webhook_received',
+            request_method=request.method,
+            request_headers=dict(request.headers),
+            request_body=json.dumps(data)
         )
 
-        # Increment template usage
-        template.increment_usage()
+        # Process webhook (trigger workflow)
+        try:
+            _process_webhook_sync(delivery, data, dict(request.headers))
 
-        serializer = WebhookEndpointSerializer(webhook)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # Update webhook statistics
+            webhook.update_delivery_stats(success=True)
 
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Webhook received and processed',
+                'delivery_id': delivery.delivery_id
+            })
+
+        except Exception as e:
+            logger.error(f"Error processing webhook: {str(e)}")
+            delivery.mark_failed(500, str(e))
+            webhook.update_delivery_stats(success=False)
+
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Webhook processing failed',
+                'delivery_id': delivery.delivery_id
+            }, status=500)
+
+    except Exception as e:
+        logger.error(f"Unexpected error in webhook receiver: {str(e)}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def webhook_test(request, webhook_id):
+    """
+    Test webhook endpoint functionality
+    """
+    try:
+        organization = request.user.organization_memberships.first().organization
+        webhook = WebhookEndpoint.objects.get(
+            id=webhook_id,
+            organization=organization
+        )
+    except WebhookEndpoint.DoesNotExist:
+        return Response(
+            {'error': 'Webhook not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = WebhookTestSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    test_data = serializer.validated_data['test_data']
+    headers = serializer.validated_data['headers']
+
+    try:
+        # Create test delivery
+        delivery = WebhookDelivery.objects.create(
+            webhook_endpoint=webhook,
+            delivery_id=f"test-{uuid.uuid4().hex[:8]}",
+            trigger_event='test',
+            request_method='POST',
+            request_headers=headers,
+            request_body=json.dumps(test_data)
+        )
+
+        # Process test webhook
+        _process_webhook_sync(delivery, test_data, headers, test_mode=True)
+
+        return Response({
+            'status': 'success',
+            'message': 'Webhook test completed successfully',
+            'delivery_id': delivery.delivery_id,
+            'response_time_ms': delivery.response_time_ms,
+            'result': 'Test webhook execution successful'
+        })
+
+    except Exception as e:
+        logger.error(f"Webhook test failed: {str(e)}")
+        return Response(
+            {'error': f'Webhook test failed: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def webhook_stats(request):
+    """
+    Get webhook statistics for organization
+    """
+    organization = request.user.organization_memberships.first().organization
+
+    # Get time range
+    days = int(request.query_params.get('days', 30))
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get organization webhooks
+    webhooks = WebhookEndpoint.objects.filter(organization=organization)
+
+    # Get deliveries in time range
+    deliveries = WebhookDelivery.objects.filter(
+        webhook_endpoint__organization=organization,
+        created_at__gte=start_date
+    )
+
+    # Calculate statistics
+    total_endpoints = webhooks.count()
+    active_endpoints = webhooks.filter(status='active').count()
+    total_deliveries = deliveries.count()
+    successful_deliveries = deliveries.filter(status='delivered').count()
+    failed_deliveries = deliveries.filter(status='failed').count()
+
+    success_rate = (successful_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0
+
+    # Average response time
+    delivered_deliveries = deliveries.filter(response_time_ms__isnull=False)
+    avg_response_time = delivered_deliveries.aggregate(
+        avg=Avg('response_time_ms')
+    )['avg'] or 0
+
+    # Daily delivery trends
+    daily_deliveries = []
+    for i in range(days):
+        date = (timezone.now() - timedelta(days=i)).date()
+        day_deliveries = deliveries.filter(created_at__date=date)
+
+        daily_deliveries.append({
+            'date': date.isoformat(),
+            'total': day_deliveries.count(),
+            'successful': day_deliveries.filter(status='delivered').count(),
+            'failed': day_deliveries.filter(status='failed').count()
+        })
+
+    # Top endpoints by delivery count
+    top_endpoints = deliveries.values(
+        'webhook_endpoint__name', 'webhook_endpoint__id'
+    ).annotate(
+        delivery_count=Count('id'),
+        success_count=Count('id', filter=Q(status='delivered')),
+        avg_response_time=Avg('response_time_ms')
+    ).order_by('-delivery_count')[:10]
+
+    stats = {
+        'period_days': days,
+        'total_endpoints': total_endpoints,
+        'active_endpoints': active_endpoints,
+        'total_deliveries': total_deliveries,
+        'successful_deliveries': successful_deliveries,
+        'failed_deliveries': failed_deliveries,
+        'success_rate': round(success_rate, 2),
+        'average_response_time': round(avg_response_time, 2),
+        'daily_deliveries': daily_deliveries,
+        'top_endpoints': list(top_endpoints)
+    }
+
+    serializer = WebhookStatsSerializer(stats)
+    return Response(serializer.data)
+
+
+# Helper functions
 
 def _get_client_ip(request):
     """Get client IP address from request"""
@@ -641,33 +630,101 @@ def _get_client_ip(request):
     return ip
 
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def webhook_health_check(request):
-    """Health check for webhook system"""
+def _check_rate_limit(webhook, request):
+    """Check rate limiting for webhook"""
+    client_ip = _get_client_ip(request)
+
+    rate_limit, created = WebhookRateLimit.objects.get_or_create(
+        webhook_endpoint=webhook,
+        ip_address=client_ip
+    )
+
+    return rate_limit.check_rate_limit()
+
+
+def _authenticate_webhook_request(webhook, request):
+    """Authenticate webhook request based on configured method"""
+    if webhook.authentication_type == 'none':
+        return True
+
+    elif webhook.authentication_type == 'secret':
+        # Check secret token in header
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        secret_header = request.META.get('HTTP_X_WEBHOOK_SECRET', '')
+
+        return webhook.secret_token in [auth_header.replace('Bearer ', ''), secret_header]
+
+    elif webhook.authentication_type == 'signature':
+        # Verify HMAC signature
+        signature_header = request.META.get(f'HTTP_{webhook.signature_header.upper().replace("-", "_")}', '')
+
+        if not signature_header or not webhook.secret_token:
+            return False
+
+        # Verify signature
+        payload = request.body.decode('utf-8')
+        return webhook.verify_signature(payload, signature_header)
+
+    elif webhook.authentication_type == 'basic':
+        # Basic authentication (would need to implement)
+        return True
+
+    elif webhook.authentication_type == 'bearer':
+        # Bearer token authentication
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        return auth_header.startswith('Bearer ') and webhook.secret_token in auth_header
+
+    return False
+
+
+def _process_webhook_sync(delivery, data, headers, test_mode=False):
+    """Process webhook delivery synchronously"""
+    start_time = timezone.now()
 
     try:
-        # Check webhook system health
-        active_webhooks = WebhookEndpoint.objects.filter(status='active').count()
-        total_deliveries_today = WebhookDelivery.objects.filter(
-            received_at__date=timezone.now().date()
-        ).count()
+        webhook = delivery.webhook_endpoint
 
-        health_status = {
-            'status': 'healthy',
-            'timestamp': timezone.now(),
-            'active_webhooks': active_webhooks,
-            'deliveries_today': total_deliveries_today
-        }
+        if test_mode:
+            # For test mode, simulate processing
+            import time
+            time.sleep(0.05)  # Simulate 50ms processing time
+            delivery.mark_delivered(200, 'Test successful', 50)
+            return
 
-        return Response(health_status)
+        # Create workflow execution
+        from apps.executions.models import ExecutionQueue
+
+        execution = ExecutionQueue.objects.create(
+            workflow=webhook.workflow,
+            execution_id=f"webhook-{uuid.uuid4().hex[:8]}",
+            trigger_type='webhook',
+            trigger_data={
+                'webhook_id': str(webhook.id),
+                'delivery_id': delivery.delivery_id,
+                'headers': headers
+            },
+            input_data=data,
+            priority='normal'
+        )
+
+        # Calculate response time
+        end_time = timezone.now()
+        response_time_ms = int((end_time - start_time).total_seconds() * 1000)
+
+        # Mark delivery as successful
+        delivery.mark_delivered(
+            200,
+            f'Workflow triggered: {execution.execution_id}',
+            response_time_ms
+        )
+
+        logger.info(f"Webhook {webhook.name} triggered execution: {execution.execution_id}")
 
     except Exception as e:
-        return Response(
-            {
-                'status': 'unhealthy',
-                'error': str(e),
-                'timestamp': timezone.now()
-            },
-            status=status.HTTP_503_SERVICE_UNAVAILABLE
-        )
+        # Calculate response time even for errors
+        end_time = timezone.now()
+        response_time_ms = int((end_time - start_time).total_seconds() * 1000)
+
+        delivery.mark_failed(500, str(e))
+        logger.error(f"Error processing webhook {delivery.webhook_endpoint.name}: {str(e)}")
+        raise

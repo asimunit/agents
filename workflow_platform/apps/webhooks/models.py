@@ -4,6 +4,7 @@ Webhook models for advanced webhook management
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import URLValidator
+from django.utils import timezone
 from apps.organizations.models import Organization
 from apps.workflows.models import Workflow
 import uuid
@@ -68,16 +69,14 @@ class WebhookEndpoint(models.Model):
 
     # Status and metadata
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
-    is_public = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_webhooks')
 
     # Statistics
-    total_requests = models.IntegerField(default=0)
-    successful_requests = models.IntegerField(default=0)
-    failed_requests = models.IntegerField(default=0)
+    total_deliveries = models.IntegerField(default=0)
+    successful_deliveries = models.IntegerField(default=0)
+    failed_deliveries = models.IntegerField(default=0)
     last_triggered_at = models.DateTimeField(null=True, blank=True)
 
-    # Metadata
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_webhooks')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -86,191 +85,155 @@ class WebhookEndpoint(models.Model):
         indexes = [
             models.Index(fields=['organization', 'status']),
             models.Index(fields=['url_path']),
-            models.Index(fields=['workflow', 'status']),
+            models.Index(fields=['workflow']),
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.url_path})"
+        return f"{self.name} - {self.organization.name}"
 
-    @property
-    def success_rate(self):
-        """Calculate webhook success rate"""
-        if self.total_requests == 0:
-            return 0
-        return (self.successful_requests / self.total_requests) * 100
+    def generate_url_path(self):
+        """Generate unique URL path for webhook"""
+        import secrets
+        self.url_path = secrets.token_urlsafe(16)
 
-    @property
-    def full_url(self):
-        """Get full webhook URL"""
-        from django.conf import settings
-        base_url = getattr(settings, 'WEBHOOK_BASE_URL', 'https://api.workflowplatform.com')
-        return f"{base_url}/webhooks/{self.url_path}"
-
-    def verify_signature(self, payload, signature, secret=None):
-        """Verify HMAC signature"""
+    def verify_signature(self, payload, signature):
+        """Verify webhook signature"""
         if self.authentication_type != 'signature':
             return True
 
-        secret = secret or self.secret_token
-        if not secret:
+        if not self.secret_token:
             return False
 
-        # Calculate expected signature
         expected_signature = hmac.new(
-            secret.encode('utf-8'),
-            payload,
+            self.secret_token.encode(),
+            payload.encode(),
             hashlib.sha256
         ).hexdigest()
 
-        # Compare signatures
         return hmac.compare_digest(f"sha256={expected_signature}", signature)
 
-    def is_ip_allowed(self, ip_address):
-        """Check if IP address is allowed"""
-        if not self.allowed_ips:
-            return True
-
-        import ipaddress
-
-        try:
-            ip = ipaddress.ip_address(ip_address)
-            for allowed_ip in self.allowed_ips:
-                if '/' in allowed_ip:
-                    # CIDR notation
-                    if ip in ipaddress.ip_network(allowed_ip):
-                        return True
-                else:
-                    # Single IP
-                    if ip == ipaddress.ip_address(allowed_ip):
-                        return True
-            return False
-        except ValueError:
-            return False
-
-    def increment_stats(self, success=True):
-        """Increment webhook statistics"""
-        self.total_requests += 1
+    def update_delivery_stats(self, success=True):
+        """Update delivery statistics"""
+        self.total_deliveries += 1
         if success:
-            self.successful_requests += 1
+            self.successful_deliveries += 1
         else:
-            self.failed_requests += 1
-
-        from django.utils import timezone
+            self.failed_deliveries += 1
         self.last_triggered_at = timezone.now()
-        self.save(update_fields=['total_requests', 'successful_requests', 'failed_requests', 'last_triggered_at'])
+        self.save(update_fields=[
+            'total_deliveries', 'successful_deliveries',
+            'failed_deliveries', 'last_triggered_at'
+        ])
 
 
 class WebhookDelivery(models.Model):
     """
-    Individual webhook delivery attempts
+    Track webhook delivery attempts and responses
     """
 
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('success', 'Success'),
+        ('delivered', 'Delivered'),
         ('failed', 'Failed'),
-        ('timeout', 'Timeout'),
-        ('retry', 'Retry'),
+        ('retrying', 'Retrying'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     webhook_endpoint = models.ForeignKey(WebhookEndpoint, on_delete=models.CASCADE, related_name='deliveries')
 
+    # Delivery identification
+    delivery_id = models.CharField(max_length=255, unique=True)
+    trigger_event = models.CharField(max_length=100)
+
     # Request details
-    http_method = models.CharField(max_length=10)
-    headers = models.JSONField(default=dict)
-    payload = models.JSONField(default=dict)
-    raw_payload = models.TextField(blank=True)
-
-    # Client information
-    ip_address = models.GenericIPAddressField()
-    user_agent = models.TextField(blank=True)
-
-    # Processing details
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    workflow_execution_id = models.UUIDField(null=True, blank=True)
+    request_method = models.CharField(max_length=10, default='POST')
+    request_headers = models.JSONField(default=dict)
+    request_body = models.TextField()
 
     # Response details
     response_status_code = models.IntegerField(null=True, blank=True)
-    response_headers = models.JSONField(default=dict, blank=True)
+    response_headers = models.JSONField(default=dict)
     response_body = models.TextField(blank=True)
+    response_time_ms = models.IntegerField(null=True, blank=True)
 
-    # Error handling
-    error_message = models.TextField(blank=True)
-    error_details = models.JSONField(default=dict, blank=True)
-    retry_count = models.IntegerField(default=0)
+    # Delivery status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    attempt_number = models.IntegerField(default=1)
+    max_attempts = models.IntegerField(default=3)
+    next_retry_at = models.DateTimeField(null=True, blank=True)
 
     # Timing
-    received_at = models.DateTimeField(auto_now_add=True)
-    processed_at = models.DateTimeField(null=True, blank=True)
-    processing_time_ms = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'webhook_deliveries'
         indexes = [
             models.Index(fields=['webhook_endpoint', 'status']),
-            models.Index(fields=['received_at']),
-            models.Index(fields=['ip_address']),
-            models.Index(fields=['workflow_execution_id']),
+            models.Index(fields=['delivery_id']),
+            models.Index(fields=['status', 'next_retry_at']),
+            models.Index(fields=['created_at']),
         ]
-        ordering = ['-received_at']
 
     def __str__(self):
-        return f"Delivery {self.id} - {self.webhook_endpoint.name} ({self.status})"
+        return f"Delivery {self.delivery_id} - {self.status}"
 
-    def mark_processing(self):
-        """Mark delivery as processing"""
-        self.status = 'processing'
-        self.save(update_fields=['status'])
-
-    def mark_success(self, execution_id=None):
+    def mark_delivered(self, status_code, response_body, response_time_ms, headers=None):
         """Mark delivery as successful"""
-        from django.utils import timezone
+        self.status = 'delivered'
+        self.response_status_code = status_code
+        self.response_body = response_body
+        self.response_time_ms = response_time_ms
+        self.sent_at = timezone.now()
 
-        self.status = 'success'
-        self.processed_at = timezone.now()
-        if execution_id:
-            self.workflow_execution_id = execution_id
+        if headers:
+            self.response_headers = headers
 
-        if self.received_at and self.processed_at:
-            self.processing_time_ms = int((self.processed_at - self.received_at).total_seconds() * 1000)
+        self.save()
+        self.webhook_endpoint.update_delivery_stats(success=True)
 
-        self.save(update_fields=['status', 'processed_at', 'workflow_execution_id', 'processing_time_ms'])
-
-    def mark_failed(self, error_message, error_details=None):
+    def mark_failed(self, status_code=None, response_body='', error_message=''):
         """Mark delivery as failed"""
-        from django.utils import timezone
-
         self.status = 'failed'
-        self.processed_at = timezone.now()
-        self.error_message = error_message
+        self.response_status_code = status_code
+        self.response_body = response_body or error_message
+        self.sent_at = timezone.now()
 
-        if error_details:
-            self.error_details = error_details
+        # Schedule retry if attempts remaining
+        if self.attempt_number < self.max_attempts:
+            retry_delay = self.webhook_endpoint.retry_delay * self.attempt_number
+            self.next_retry_at = timezone.now() + timezone.timedelta(seconds=retry_delay)
+            self.status = 'retrying'
 
-        if self.received_at and self.processed_at:
-            self.processing_time_ms = int((self.processed_at - self.received_at).total_seconds() * 1000)
+        self.save()
 
-        self.save(update_fields=['status', 'processed_at', 'error_message', 'error_details', 'processing_time_ms'])
+        if self.status == 'failed':
+            self.webhook_endpoint.update_delivery_stats(success=False)
+
+    def can_retry(self):
+        """Check if delivery can be retried"""
+        return (
+            self.status == 'retrying' and
+            self.attempt_number < self.max_attempts and
+            self.next_retry_at and
+            self.next_retry_at <= timezone.now()
+        )
 
 
 class WebhookRateLimit(models.Model):
     """
-    Rate limiting tracking for webhooks
+    Rate limiting for webhook endpoints
     """
 
     webhook_endpoint = models.ForeignKey(WebhookEndpoint, on_delete=models.CASCADE, related_name='rate_limits')
     ip_address = models.GenericIPAddressField()
 
-    # Rate limiting
     request_count = models.IntegerField(default=0)
-    window_start = models.DateTimeField(auto_now_add=True)
-    last_request = models.DateTimeField(auto_now=True)
-
-    # Blocking
+    window_start = models.DateTimeField(default=timezone.now)
     is_blocked = models.BooleanField(default=False)
-    blocked_until = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'webhook_rate_limits'
@@ -278,150 +241,143 @@ class WebhookRateLimit(models.Model):
         indexes = [
             models.Index(fields=['webhook_endpoint', 'ip_address']),
             models.Index(fields=['window_start']),
-            models.Index(fields=['is_blocked', 'blocked_until']),
         ]
 
-    def is_rate_limited(self):
-        """Check if requests are rate limited"""
-        from django.utils import timezone
+    def __str__(self):
+        return f"Rate limit for {self.ip_address} on {self.webhook_endpoint.name}"
 
+    def check_rate_limit(self):
+        """Check if request should be rate limited"""
         now = timezone.now()
-
-        # Check if blocked
-        if self.is_blocked and self.blocked_until and now < self.blocked_until:
-            return True
+        window_duration = timezone.timedelta(seconds=self.webhook_endpoint.rate_limit_window)
 
         # Reset window if expired
-        window_duration = timezone.timedelta(seconds=self.webhook_endpoint.rate_limit_window)
         if now - self.window_start > window_duration:
-            self.request_count = 0
             self.window_start = now
+            self.request_count = 0
             self.is_blocked = False
-            self.blocked_until = None
-            self.save()
 
-        # Check rate limit
-        return self.request_count >= self.webhook_endpoint.rate_limit_requests
-
-    def increment_request(self):
-        """Increment request count"""
-        from django.utils import timezone
-
+        # Increment request count
         self.request_count += 1
-        self.last_request = timezone.now()
 
-        # Block if rate limit exceeded
-        if self.request_count >= self.webhook_endpoint.rate_limit_requests:
+        # Check if limit exceeded
+        if self.request_count > self.webhook_endpoint.rate_limit_requests:
             self.is_blocked = True
-            self.blocked_until = timezone.now() + timezone.timedelta(
-                seconds=self.webhook_endpoint.rate_limit_window
-            )
 
         self.save()
+        return not self.is_blocked
 
 
 class WebhookEvent(models.Model):
     """
-    Webhook events for audit logging
+    Webhook events for processing and auditing
     """
 
     EVENT_TYPES = [
-        ('endpoint_created', 'Endpoint Created'),
-        ('endpoint_updated', 'Endpoint Updated'),
-        ('endpoint_deleted', 'Endpoint Deleted'),
-        ('delivery_received', 'Delivery Received'),
-        ('delivery_processed', 'Delivery Processed'),
-        ('delivery_failed', 'Delivery Failed'),
-        ('rate_limit_hit', 'Rate Limit Hit'),
-        ('authentication_failed', 'Authentication Failed'),
-        ('ip_blocked', 'IP Blocked'),
+        ('workflow_start', 'Workflow Started'),
+        ('workflow_complete', 'Workflow Completed'),
+        ('workflow_failed', 'Workflow Failed'),
+        ('node_execute', 'Node Executed'),
+        ('custom', 'Custom Event'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='webhook_events')
-    webhook_endpoint = models.ForeignKey(WebhookEndpoint, on_delete=models.CASCADE, related_name='events', null=True,
-                                         blank=True)
-    delivery = models.ForeignKey(WebhookDelivery, on_delete=models.CASCADE, related_name='events', null=True,
-                                 blank=True)
+    webhook_endpoint = models.ForeignKey(WebhookEndpoint, on_delete=models.CASCADE, related_name='events')
 
     # Event details
+    name = models.CharField(max_length=255)
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
-    description = models.TextField()
+    event_data = models.JSONField(default=dict)
 
-    # Context
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(blank=True)
+    # Processing status
+    processed = models.BooleanField(default=False)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    processing_time = models.DurationField(null=True, blank=True)
 
-    # Additional data
-    event_data = models.JSONField(default=dict, blank=True)
+    # Results
+    processing_result = models.JSONField(default=dict)
+    error_message = models.TextField(blank=True)
+    error_details = models.JSONField(default=dict)
 
-    # Timestamp
+    # Metadata
+    metadata = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'webhook_events'
         indexes = [
-            models.Index(fields=['organization', 'event_type']),
             models.Index(fields=['webhook_endpoint', 'event_type']),
-            models.Index(fields=['created_at']),
+            models.Index(fields=['processed', 'created_at']),
+            models.Index(fields=['event_type', 'created_at']),
         ]
-        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.event_type} - {self.webhook_endpoint.name if self.webhook_endpoint else 'N/A'}"
+        return f"{self.name} - {self.event_type}"
+
+    def mark_processed(self, result=None, error=None):
+        """Mark event as processed"""
+        self.processed = True
+        self.processed_at = timezone.now()
+
+        if self.created_at:
+            self.processing_time = self.processed_at - self.created_at
+
+        if result:
+            self.processing_result = result
+
+        if error:
+            self.error_message = str(error)
+            self.error_details = {'error': str(error)}
+
+        self.save()
 
 
 class WebhookTemplate(models.Model):
     """
-    Webhook templates for common integrations
+    Templates for common webhook configurations
     """
 
-    CATEGORY_CHOICES = [
-        ('ecommerce', 'E-commerce'),
-        ('payment', 'Payment'),
-        ('communication', 'Communication'),
-        ('analytics', 'Analytics'),
-        ('social', 'Social Media'),
-        ('development', 'Development'),
-        ('other', 'Other'),
+    WEBHOOK_TYPES = [
+        ('github', 'GitHub'),
+        ('slack', 'Slack'),
+        ('discord', 'Discord'),
+        ('teams', 'Microsoft Teams'),
+        ('generic', 'Generic HTTP'),
+        ('custom', 'Custom'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='webhook_templates')
 
     # Template details
     name = models.CharField(max_length=255)
     description = models.TextField()
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    webhook_type = models.CharField(max_length=50, choices=WEBHOOK_TYPES)
 
-    # Service information
-    service_name = models.CharField(max_length=100)  # e.g., 'Stripe', 'GitHub', 'Shopify'
-    service_icon = models.CharField(max_length=50, blank=True)
-    documentation_url = models.URLField(blank=True)
-
-    # Configuration template
-    configuration = models.JSONField(default=dict)
+    # Configuration
+    default_config = models.JSONField(default=dict)
     example_payload = models.JSONField(default=dict)
 
-    # Usage
-    usage_count = models.IntegerField(default=0)
-    is_featured = models.BooleanField(default=False)
-    is_official = models.BooleanField(default=False)
+    # Documentation
+    setup_instructions = models.TextField(blank=True)
+    validation_rules = models.JSONField(default=dict)
 
     # Metadata
+    is_active = models.BooleanField(default=True)
+    usage_count = models.IntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'webhook_templates'
         indexes = [
-            models.Index(fields=['category', 'is_featured']),
-            models.Index(fields=['service_name']),
-            models.Index(fields=['usage_count']),
+            models.Index(fields=['webhook_type', 'is_active']),
+            models.Index(fields=['created_by']),
         ]
 
     def __str__(self):
-        return f"{self.service_name} - {self.name}"
+        return f"{self.name} ({self.webhook_type})"
 
     def increment_usage(self):
         """Increment usage count"""

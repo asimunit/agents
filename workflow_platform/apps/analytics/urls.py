@@ -5,33 +5,33 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     AnalyticsDashboardViewSet,
-    MetricDefinitionViewSet,
-    ErrorAnalyticsViewSet,
-    AlertRuleViewSet,
-    overview_analytics,
-    performance_analytics,
-    usage_analytics,
-    business_analytics,
-    real_time_metrics
+    AnalyticsWidgetViewSet,
+    AnalyticsReportViewSet,
+    AnalyticsMetricViewSet,
+    UsageAnalyticsViewSet,
+    PerformanceMetricsViewSet,
+    AnalyticsAlertViewSet,
+    overview_stats,
+    workflow_analytics
 )
 
 # Create router and register viewsets
 router = DefaultRouter()
 router.register(r'dashboards', AnalyticsDashboardViewSet, basename='analytics-dashboards')
-router.register(r'metrics', MetricDefinitionViewSet, basename='metric-definitions')
-router.register(r'errors', ErrorAnalyticsViewSet, basename='error-analytics')
-router.register(r'alerts', AlertRuleViewSet, basename='alert-rules')
+router.register(r'widgets', AnalyticsWidgetViewSet, basename='analytics-widgets')
+router.register(r'reports', AnalyticsReportViewSet, basename='analytics-reports')
+router.register(r'metrics', AnalyticsMetricViewSet, basename='analytics-metrics')
+router.register(r'usage', UsageAnalyticsViewSet, basename='usage-analytics')
+router.register(r'performance', PerformanceMetricsViewSet, basename='performance-metrics')
+router.register(r'alerts', AnalyticsAlertViewSet, basename='analytics-alerts')
 
 urlpatterns = [
-    # API endpoints
+    # Router URLs
     path('', include(router.urls)),
 
-    # Analytics views
-    path('overview/', overview_analytics, name='overview_analytics'),
-    path('performance/', performance_analytics, name='performance_analytics'),
-    path('usage/', usage_analytics, name='usage_analytics'),
-    path('business/', business_analytics, name='business_analytics'),
-    path('real-time/', real_time_metrics, name='real_time_metrics'),
+    # Custom analytics endpoints
+    path('overview/', overview_stats, name='overview_stats'),
+    path('workflows/<uuid:workflow_id>/', workflow_analytics, name='workflow_analytics'),
 ]
 
 app_name = 'analytics'

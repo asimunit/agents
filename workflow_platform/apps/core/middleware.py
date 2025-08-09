@@ -1,13 +1,13 @@
 """
-Custom Middleware for Workflow Platform
+Core Middleware - Custom middleware for the workflow platform
 """
 import time
 import logging
-from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from django.http import JsonResponse
-from django.core.cache import cache
+from django.utils import timezone
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from apps.organizations.models import OrganizationMember
 
 logger = logging.getLogger(__name__)
@@ -15,157 +15,182 @@ logger = logging.getLogger(__name__)
 
 class TenantMiddleware(MiddlewareMixin):
     """
-    Multi-tenant middleware that sets the current organization context
+    Middleware for multi-tenant organization context
     """
 
     def process_request(self, request):
-        """
-        Set organization context based on user authentication
-        """
-        if hasattr(request, 'user') and request.user.is_authenticated:
-            try:
-                # Get user's active organization membership
-                membership = request.user.organization_memberships.filter(status='active').first()
-                if membership:
-                    request.organization = membership.organization
-                    request.user_role = membership.role
-                    request.user_permissions = membership.permissions
-                else:
-                    request.organization = None
-                    request.user_role = None
-                    request.user_permissions = {}
-            except Exception as e:
-                logger.warning(f"Error setting tenant context: {str(e)}")
-                request.organization = None
-                request.user_role = None
-                request.user_permissions = {}
-        else:
-            request.organization = None
-            request.user_role = None
-            request.user_permissions = {}
+        """Set organization context based on user"""
+        request.organization = None
+        request.organization_member = None
+
+        # Skip for anonymous users
+        if isinstance(request.user, AnonymousUser) or not request.user.is_authenticated:
+            return None
+
+        try:
+            # Get the user's active organization membership
+            membership = OrganizationMember.objects.filter(
+                user=request.user,
+                status='active'
+            ).select_related('organization').first()
+
+            if membership:
+                request.organization = membership.organization
+                request.organization_member = membership
+
+                # Set organization in thread-local storage for use in models
+                from threading import local
+                if not hasattr(local(), 'organization'):
+                    local().organization = membership.organization
+
+        except Exception as e:
+            logger.error(f"Error setting organization context: {str(e)}")
 
         return None
-
-    def process_response(self, request, response):
-        """
-        Add organization context to response headers (for debugging)
-        """
-        if settings.DEBUG and hasattr(request, 'organization') and request.organization:
-            response['X-Organization-ID'] = str(request.organization.id)
-            response['X-Organization-Name'] = request.organization.name
-            response['X-User-Role'] = getattr(request, 'user_role', 'unknown')
-
-        return response
 
 
 class PerformanceMiddleware(MiddlewareMixin):
     """
-    Performance monitoring middleware
+    Middleware for performance monitoring and logging
     """
 
     def process_request(self, request):
-        """
-        Start performance timing
-        """
+        """Start timing the request"""
         request.start_time = time.time()
-        request.db_queries_start = len(getattr(request, '_db_queries', []))
+        return None
 
     def process_response(self, request, response):
-        """
-        Add performance headers and logging
-        """
+        """Log request performance"""
         if hasattr(request, 'start_time'):
-            # Calculate response time
-            response_time = (time.time() - request.start_time) * 1000  # milliseconds
-
-            # Add performance headers
-            response['X-Response-Time'] = f"{response_time:.2f}ms"
+            duration = time.time() - request.start_time
 
             # Log slow requests
-            if response_time > getattr(settings, 'SLOW_REQUEST_THRESHOLD', 1000):
+            if duration > getattr(settings, 'SLOW_REQUEST_THRESHOLD', 2.0):
                 logger.warning(
-                    f"Slow request: {request.method} {request.path} took {response_time:.2f}ms",
-                    extra={
-                        'request_method': request.method,
-                        'request_path': request.path,
-                        'response_time_ms': response_time,
-                        'status_code': response.status_code,
-                        'user_id': request.user.id if hasattr(request,
-                                                              'user') and request.user.is_authenticated else None,
-                    }
+                    f"Slow request: {request.method} {request.path} "
+                    f"took {duration:.2f}s - User: {getattr(request.user, 'username', 'anonymous')}"
                 )
 
-            # Add database query count (in debug mode)
-            if settings.DEBUG:
-                from django.db import connection
-                response['X-DB-Queries'] = len(connection.queries)
+            # Add performance headers
+            response['X-Response-Time'] = f"{duration:.3f}"
+
+            # Store performance metrics for analytics
+            if hasattr(request, 'organization') and request.organization:
+                self._store_performance_metric(request, response, duration)
 
         return response
+
+    def _store_performance_metric(self, request, response, duration):
+        """Store performance metrics for analytics"""
+        try:
+            # Only store metrics for API endpoints
+            if request.path.startswith('/api/'):
+                from apps.analytics.models import AnalyticsMetric
+
+                # Create performance metric
+                AnalyticsMetric.objects.create(
+                    organization=request.organization,
+                    name='api_response_time',
+                    metric_type='duration',
+                    category='performance',
+                    value=duration,
+                    unit='seconds',
+                    aggregation_period='hour',
+                    period_start=timezone.now().replace(minute=0, second=0, microsecond=0),
+                    period_end=timezone.now().replace(minute=59, second=59, microsecond=999999),
+                    metadata={
+                        'endpoint': request.path,
+                        'method': request.method,
+                        'status_code': response.status_code
+                    }
+                )
+        except Exception as e:
+            logger.error(f"Error storing performance metric: {str(e)}")
 
 
 class RateLimitMiddleware(MiddlewareMixin):
     """
-    API rate limiting middleware
+    Simple rate limiting middleware
     """
 
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.cache = {}  # In production, use Redis
+        super().__init__(get_response)
+
     def process_request(self, request):
-        """
-        Check rate limits for API requests
-        """
-        # Only apply to API endpoints
+        """Check rate limits"""
+        # Skip rate limiting for non-API requests
         if not request.path.startswith('/api/'):
             return None
 
         # Get client identifier
-        client_id = self._get_client_identifier(request)
-
-        # Determine rate limits based on authentication
-        if hasattr(request, 'user') and request.user.is_authenticated:
-            # Authenticated user limits
-            if hasattr(request, 'organization') and request.organization:
-                rate_limit = request.organization.max_api_calls_per_hour
-                window = 3600  # 1 hour
-            else:
-                rate_limit = getattr(settings, 'API_RATE_LIMIT_USER', 1000)
-                window = 3600
-        else:
-            # Anonymous user limits
-            rate_limit = getattr(settings, 'API_RATE_LIMIT_ANON', 100)
-            window = 3600
+        client_id = self._get_client_id(request)
 
         # Check rate limit
-        cache_key = f"rate_limit:{client_id}"
-        current_requests = cache.get(cache_key, 0)
-
-        if current_requests >= rate_limit:
+        if self._is_rate_limited(client_id, request):
             return JsonResponse({
                 'error': 'Rate limit exceeded',
-                'limit': rate_limit,
-                'window_seconds': window,
-                'retry_after': window
+                'message': 'Too many requests. Please try again later.',
+                'retry_after': 3600  # 1 hour
             }, status=429)
-
-        # Increment counter
-        cache.set(cache_key, current_requests + 1, timeout=window)
 
         return None
 
-    def _get_client_identifier(self, request):
-        """
-        Get unique client identifier for rate limiting
-        """
+    def _get_client_id(self, request):
+        """Get client identifier for rate limiting"""
+        # Use API key if present
+        api_key = request.META.get('HTTP_X_API_KEY')
+        if api_key:
+            return f"api_key:{api_key}"
+
         # Use user ID if authenticated
-        if hasattr(request, 'user') and request.user.is_authenticated:
+        if request.user.is_authenticated:
             return f"user:{request.user.id}"
 
-        # Use IP address for anonymous users
+        # Use IP address as fallback
+        ip = self._get_client_ip(request)
+        return f"ip:{ip}"
+
+    def _get_client_ip(self, request):
+        """Get client IP address"""
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
+            ip = x_forwarded_for.split(',')[0]
         else:
             ip = request.META.get('REMOTE_ADDR')
+        return ip
 
-        return f"ip:{ip}"
+    def _is_rate_limited(self, client_id, request):
+        """Check if client is rate limited"""
+        now = time.time()
+        window = 3600  # 1 hour window
+
+        # Get rate limit based on client type
+        if client_id.startswith('api_key:'):
+            limit = 10000  # 10k requests per hour for API keys
+        elif client_id.startswith('user:'):
+            limit = 1000   # 1k requests per hour for authenticated users
+        else:
+            limit = 100    # 100 requests per hour for anonymous users
+
+        # Clean old entries
+        cutoff = now - window
+        if client_id in self.cache:
+            self.cache[client_id] = [
+                timestamp for timestamp in self.cache[client_id]
+                if timestamp > cutoff
+            ]
+        else:
+            self.cache[client_id] = []
+
+        # Check if limit exceeded
+        if len(self.cache[client_id]) >= limit:
+            return True
+
+        # Record this request
+        self.cache[client_id].append(now)
+        return False
 
 
 class SecurityHeadersMiddleware(MiddlewareMixin):
@@ -174,205 +199,157 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
     """
 
     def process_response(self, request, response):
-        """
-        Add security headers
-        """
+        """Add security headers"""
         # Content Security Policy
-        if not response.get('Content-Security-Policy'):
-            response['Content-Security-Policy'] = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'self' https://fonts.gstatic.com; "
-                "img-src 'self' data: https:; "
-                "connect-src 'self' https: wss:; "
-                "frame-ancestors 'none';"
-            )
+        response['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' https:; "
+            "connect-src 'self' wss: ws:; "
+            "frame-ancestors 'none';"
+        )
 
-        # Additional security headers
+        # Other security headers
         response['X-Content-Type-Options'] = 'nosniff'
         response['X-Frame-Options'] = 'DENY'
         response['X-XSS-Protection'] = '1; mode=block'
         response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
-        # HSTS (only in production with HTTPS)
-        if not settings.DEBUG and request.is_secure():
-            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+        # HSTS for HTTPS
+        if request.is_secure():
+            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
 
         return response
 
 
-class APIVersionMiddleware(MiddlewareMixin):
+class APIVersioningMiddleware(MiddlewareMixin):
     """
-    API versioning middleware
+    Handle API versioning
     """
 
     def process_request(self, request):
-        """
-        Extract and validate API version
-        """
+        """Set API version context"""
+        # Default version
+        request.api_version = 'v1'
+
+        # Check for version in header
+        version_header = request.META.get('HTTP_API_VERSION')
+        if version_header:
+            request.api_version = version_header
+
+        # Check for version in URL
         if request.path.startswith('/api/'):
-            # Extract version from URL path
             path_parts = request.path.strip('/').split('/')
             if len(path_parts) >= 2 and path_parts[1].startswith('v'):
-                version = path_parts[1]
-            else:
-                # Default to v1 if no version specified
-                version = 'v1'
-
-            # Validate version
-            supported_versions = getattr(settings, 'API_SUPPORTED_VERSIONS', ['v1'])
-            if version not in supported_versions:
-                return JsonResponse({
-                    'error': 'Unsupported API version',
-                    'supported_versions': supported_versions
-                }, status=400)
-
-            request.api_version = version
-
-        return None
-
-    def process_response(self, request, response):
-        """
-        Add API version to response headers
-        """
-        if hasattr(request, 'api_version'):
-            response['X-API-Version'] = request.api_version
-
-        return response
-
-
-class RequestLoggingMiddleware(MiddlewareMixin):
-    """
-    Request logging middleware for audit trails
-    """
-
-    def process_request(self, request):
-        """
-        Log incoming requests
-        """
-        # Only log API requests and sensitive operations
-        if (request.path.startswith('/api/') or
-                request.method in ['POST', 'PUT', 'PATCH', 'DELETE']):
-            logger.info(
-                f"Request: {request.method} {request.path}",
-                extra={
-                    'request_method': request.method,
-                    'request_path': request.path,
-                    'user_id': request.user.id if hasattr(request, 'user') and request.user.is_authenticated else None,
-                    'organization_id': str(request.organization.id) if hasattr(request,
-                                                                               'organization') and request.organization else None,
-                    'ip_address': self._get_client_ip(request),
-                    'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-                    'content_type': request.content_type,
-                }
-            )
-
-        return None
-
-    def process_response(self, request, response):
-        """
-        Log response details
-        """
-        # Log errors and important operations
-        if (response.status_code >= 400 or
-                (hasattr(request, 'path') and request.path.startswith('/api/') and
-                 request.method in ['POST', 'PUT', 'PATCH', 'DELETE'])):
-            logger.info(
-                f"Response: {response.status_code} for {request.method} {request.path}",
-                extra={
-                    'status_code': response.status_code,
-                    'request_method': request.method,
-                    'request_path': request.path,
-                    'response_time_ms': getattr(request, 'response_time_ms', None),
-                    'user_id': request.user.id if hasattr(request, 'user') and request.user.is_authenticated else None,
-                }
-            )
-
-        return response
-
-    def _get_client_ip(self, request):
-        """
-        Get client IP address
-        """
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
-
-
-class HealthCheckMiddleware(MiddlewareMixin):
-    """
-    Health check middleware for load balancers
-    """
-
-    def process_request(self, request):
-        """
-        Handle health check requests
-        """
-        if request.path in ['/health/', '/health', '/healthz', '/ping']:
-            return JsonResponse({
-                'status': 'healthy',
-                'timestamp': timezone.now().isoformat(),
-                'version': getattr(settings, 'APP_VERSION', '1.0.0')
-            })
-
-        return None
-
-
-class MaintenanceModeMiddleware(MiddlewareMixin):
-    """
-    Maintenance mode middleware
-    """
-
-    def process_request(self, request):
-        """
-        Check if system is in maintenance mode
-        """
-        # Check maintenance mode flag
-        maintenance_mode = cache.get('maintenance_mode', False)
-
-        if maintenance_mode:
-            # Allow access to admin and health endpoints
-            allowed_paths = ['/admin/', '/health/', '/api/v1/auth/login/']
-            if not any(request.path.startswith(path) for path in allowed_paths):
-
-                # Allow superusers
-                if hasattr(request, 'user') and request.user.is_authenticated and request.user.is_superuser:
-                    return None
-
-                return JsonResponse({
-                    'error': 'System is currently under maintenance',
-                    'message': 'Please try again later',
-                    'retry_after': 3600  # 1 hour
-                }, status=503)
+                request.api_version = path_parts[1]
 
         return None
 
 
 class CORSMiddleware(MiddlewareMixin):
     """
-    Custom CORS middleware for fine-grained control
+    Handle CORS for API requests
     """
 
     def process_response(self, request, response):
-        """
-        Add CORS headers
-        """
-        # Get allowed origins from settings
-        allowed_origins = getattr(settings, 'CORS_ALLOWED_ORIGINS', [])
-        origin = request.META.get('HTTP_ORIGIN')
+        """Add CORS headers for API requests"""
+        if request.path.startswith('/api/'):
+            # Get allowed origins from settings
+            allowed_origins = getattr(settings, 'CORS_ALLOWED_ORIGINS', ['http://localhost:3000'])
+            origin = request.META.get('HTTP_ORIGIN')
 
-        if origin in allowed_origins or settings.DEBUG:
-            response['Access-Control-Allow-Origin'] = origin
-            response['Access-Control-Allow-Credentials'] = 'true'
+            if origin in allowed_origins:
+                response['Access-Control-Allow-Origin'] = origin
+
             response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
             response['Access-Control-Allow-Headers'] = (
-                'Accept, Accept-Language, Content-Language, Content-Type, '
-                'Authorization, X-Requested-With, X-API-Key'
+                'Accept, Content-Type, Authorization, X-API-Key, API-Version'
             )
-            response['Access-Control-Max-Age'] = '86400'  # 24 hours
+            response['Access-Control-Allow-Credentials'] = 'true'
+            response['Access-Control-Max-Age'] = '3600'
 
         return response
+
+    def process_request(self, request):
+        """Handle OPTIONS requests for CORS preflight"""
+        if request.method == 'OPTIONS' and request.path.startswith('/api/'):
+            response = JsonResponse({})
+            return self.process_response(request, response)
+
+        return None
+
+
+class RequestLoggingMiddleware(MiddlewareMixin):
+    """
+    Log API requests for audit and debugging
+    """
+
+    def process_request(self, request):
+        """Log incoming requests"""
+        # Only log API requests
+        if not request.path.startswith('/api/'):
+            return None
+
+        # Skip health check endpoints
+        if request.path in ['/api/health/', '/health/']:
+            return None
+
+        logger.info(
+            f"API Request: {request.method} {request.path} "
+            f"- User: {getattr(request.user, 'username', 'anonymous')} "
+            f"- IP: {self._get_client_ip(request)} "
+            f"- User-Agent: {request.META.get('HTTP_USER_AGENT', '')[:100]}"
+        )
+
+        return None
+
+    def process_response(self, request, response):
+        """Log response details for errors"""
+        if (request.path.startswith('/api/') and
+            response.status_code >= 400 and
+            request.path not in ['/api/health/', '/health/']):
+
+            logger.warning(
+                f"API Error Response: {request.method} {request.path} "
+                f"- Status: {response.status_code} "
+                f"- User: {getattr(request.user, 'username', 'anonymous')}"
+            )
+
+        return response
+
+    def _get_client_ip(self, request):
+        """Get client IP address"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
+
+class MaintenanceModeMiddleware(MiddlewareMixin):
+    """
+    Handle maintenance mode
+    """
+
+    def process_request(self, request):
+        """Check if system is in maintenance mode"""
+        # Check for maintenance mode setting
+        maintenance_mode = getattr(settings, 'MAINTENANCE_MODE', False)
+
+        if maintenance_mode:
+            # Allow access to admin and health endpoints
+            allowed_paths = ['/admin/', '/health/', '/api/health/']
+
+            if not any(request.path.startswith(path) for path in allowed_paths):
+                # Allow superusers to access during maintenance
+                if not (request.user.is_authenticated and request.user.is_superuser):
+                    return JsonResponse({
+                        'error': 'System Maintenance',
+                        'message': 'The system is currently under maintenance. Please try again later.',
+                        'maintenance': True
+                    }, status=503)
+
+        return None
