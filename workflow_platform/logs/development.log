@@ -28,3 +28,836 @@ INFO 2025-08-09 13:15:14,598 autoreload 154556 124777740315520 /home/asim/work/p
 INFO 2025-08-09 13:15:14,914 autoreload 154600 125853890026368 Watching for file changes with StatReloader
 INFO 2025-08-09 13:19:49,871 autoreload 154600 125853890026368 /home/asim/work/project/workflow_platform/apps/webhooks/views.py changed, reloading.
 INFO 2025-08-09 13:19:50,180 autoreload 154819 130936979118976 Watching for file changes with StatReloader
+INFO 2025-08-09 13:22:51,641 autoreload 155827 139762716023680 Watching for file changes with StatReloader
+INFO 2025-08-09 13:29:24,208 autoreload 155827 139762716023680 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/models.py changed, reloading.
+INFO 2025-08-09 13:29:24,559 autoreload 156133 129576233507712 Watching for file changes with StatReloader
+INFO 2025-08-09 13:30:01,742 autoreload 156133 129576233507712 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/organizations/admin.py changed, reloading.
+INFO 2025-08-09 13:30:02,059 autoreload 156198 140394159455104 Watching for file changes with StatReloader
+INFO 2025-08-09 13:30:59,518 autoreload 156198 140394159455104 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py changed, reloading.
+INFO 2025-08-09 13:30:59,831 autoreload 156258 135864680283008 Watching for file changes with StatReloader
+INFO 2025-08-09 13:31:19,712 autoreload 156258 135864680283008 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py changed, reloading.
+INFO 2025-08-09 13:31:20,027 autoreload 156300 126402351405952 Watching for file changes with StatReloader
+INFO 2025-08-09 13:31:40,449 autoreload 156300 126402351405952 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py changed, reloading.
+INFO 2025-08-09 13:31:40,753 autoreload 156341 135437653912448 Watching for file changes with StatReloader
+INFO 2025-08-09 13:32:34,248 autoreload 156341 135437653912448 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py changed, reloading.
+INFO 2025-08-09 13:32:34,631 autoreload 156410 140324261841792 Watching for file changes with StatReloader
+INFO 2025-08-09 13:32:49,424 autoreload 156410 140324261841792 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py changed, reloading.
+INFO 2025-08-09 13:32:50,020 autoreload 156454 124783452744576 Watching for file changes with StatReloader
+INFO 2025-08-09 13:33:07,902 autoreload 156454 124783452744576 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/organizations/admin.py changed, reloading.
+INFO 2025-08-09 13:33:08,226 autoreload 156498 127423538391936 Watching for file changes with StatReloader
+INFO 2025-08-09 13:33:20,989 autoreload 156498 127423538391936 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/organizations/admin.py changed, reloading.
+INFO 2025-08-09 13:33:21,329 autoreload 156541 126913915804544 Watching for file changes with StatReloader
+INFO 2025-08-09 13:34:02,449 autoreload 156541 126913915804544 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/organizations/admin.py changed, reloading.
+INFO 2025-08-09 13:34:02,797 autoreload 156596 131693543312256 Watching for file changes with StatReloader
+INFO 2025-08-09 13:35:34,827 autoreload 156596 131693543312256 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/workflows/admin.py changed, reloading.
+INFO 2025-08-09 13:35:35,204 autoreload 156698 123702714997632 Watching for file changes with StatReloader
+INFO 2025-08-09 13:35:46,533 autoreload 156698 123702714997632 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/workflows/admin.py changed, reloading.
+INFO 2025-08-09 13:35:46,845 autoreload 156744 126682275691392 Watching for file changes with StatReloader
+INFO 2025-08-09 13:36:14,949 autoreload 156744 126682275691392 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/workflows/admin.py changed, reloading.
+INFO 2025-08-09 13:36:15,299 autoreload 156786 129380078394240 Watching for file changes with StatReloader
+INFO 2025-08-09 13:36:35,126 autoreload 156786 129380078394240 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/workflows/admin.py changed, reloading.
+INFO 2025-08-09 13:36:35,471 autoreload 156866 136192482364288 Watching for file changes with StatReloader
+INFO 2025-08-09 13:36:47,393 autoreload 157041 133654208424832 Watching for file changes with StatReloader
+INFO 2025-08-09 13:38:37,436 autoreload 157041 133654208424832 /home/asim/work/project/agents/tm/agents/workflow_platform/apps/authentication/admin.py changed, reloading.
+INFO 2025-08-09 13:38:37,805 autoreload 157186 134765476985728 Watching for file changes with StatReloader
+INFO 2025-08-09 13:38:57,283 autoreload 157371 137091753409408 Watching for file changes with StatReloader
+INFO 2025-08-09 13:40:43,292 autoreload 157371 137091753409408 /home/asim/work/project/agents/tm/agents/workflow_platform/workflow_platform/settings/base.py changed, reloading.
+INFO 2025-08-09 13:40:43,617 autoreload 157491 140109993036672 Watching for file changes with StatReloader
+INFO 2025-08-09 13:41:11,603 autoreload 157491 140109993036672 /home/asim/work/project/agents/tm/agents/workflow_platform/workflow_platform/settings/development.py changed, reloading.
+INFO 2025-08-09 13:41:11,928 autoreload 157549 140144701713280 Watching for file changes with StatReloader
+INFO 2025-08-09 13:41:40,543 autoreload 157768 126087892294528 Watching for file changes with StatReloader
+INFO 2025-08-09 13:45:02,066 autoreload 160484 134395141368704 Watching for file changes with StatReloader
+INFO 2025-08-09 13:46:18,459 autoreload 160731 132330522164096 Watching for file changes with StatReloader
+INFO 2025-08-09 13:49:07,520 autoreload 162147 130743151844224 Watching for file changes with StatReloader
+INFO 2025-08-09 13:52:43,075 autoreload 164221 140563586988928 Watching for file changes with StatReloader
+WARNING 2025-08-09 13:52:46,234 log 164221 140562013353536 Not Found: /
+WARNING 2025-08-09 13:52:46,234 basehttp 164221 140562013353536 "GET / HTTP/1.1" 404 3622
+WARNING 2025-08-09 13:52:46,334 log 164221 140562013353536 Not Found: /favicon.ico
+WARNING 2025-08-09 13:52:46,335 basehttp 164221 140562013353536 "GET /favicon.ico HTTP/1.1" 404 3673
+INFO 2025-08-09 13:52:50,797 basehttp 164221 140562013353536 "GET /admin HTTP/1.1" 301 0
+INFO 2025-08-09 13:52:50,835 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-08-09 13:52:50,893 basehttp 164221 140562013353536 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4198
+INFO 2025-08-09 13:52:50,956 basehttp 164221 140561931564608 "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2929
+INFO 2025-08-09 13:52:50,956 basehttp 164221 140562013353536 "GET /static/admin/css/base.css HTTP/1.1" 200 21207
+INFO 2025-08-09 13:52:50,956 basehttp 164221 140561923171904 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2694
+INFO 2025-08-09 13:52:50,957 basehttp 164221 140561914779200 "GET /static/admin/css/login.css HTTP/1.1" 200 958
+INFO 2025-08-09 13:52:50,960 basehttp 164221 140561931564608 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-08-09 13:52:50,960 basehttp 164221 140561897993792 "GET /static/admin/js/theme.js HTTP/1.1" 200 1943
+INFO 2025-08-09 13:52:50,961 basehttp 164221 140561906386496 "GET /static/admin/css/responsive.css HTTP/1.1" 200 18533
+INFO 2025-08-09 13:52:53,150 basehttp 164221 140561931564608 "POST /admin/login/?next=/admin/ HTTP/1.1" 200 4373
+INFO 2025-08-09 13:53:24,712 signals 164337 134642262887296 User created: asim (asim.khan@gmail.com)
+INFO 2025-08-09 13:53:36,316 basehttp 164221 140561931564608 "POST /admin/login/?next=/admin/ HTTP/1.1" 200 4373
+INFO 2025-08-09 13:53:37,942 basehttp 164221 140561931564608 "POST /admin/login/?next=/admin/ HTTP/1.1" 200 4373
+ERROR 2025-08-09 13:53:49,786 log 164221 140561931564608 Internal Server Error: /admin/login/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django_redis/cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django_redis/cache.py", line 138, in has_key
+    return self.client.has_key(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django_redis/client/default.py", line 670, in has_key
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 441, in login
+    return LoginView.as_view(**defaults)(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/debug.py", line 92, in sensitive_post_parameters_wrapper
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/auth/views.py", line 90, in dispatch
+    return super().dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/generic/base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/generic/edit.py", line 153, in post
+    return self.form_valid(form)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/auth/views.py", line 109, in form_valid
+    auth_login(self.request, form.get_user())
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/auth/__init__.py", line 118, in login
+    request.session.cycle_key()
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/sessions/backends/base.py", line 304, in cycle_key
+    self.create()
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/sessions/backends/cache.py", line 42, in create
+    self._session_key = self._get_new_session_key()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/sessions/backends/base.py", line 150, in _get_new_session_key
+    if not self.exists(session_key):
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/sessions/backends/cache.py", line 73, in exists
+    bool(session_key) and (self.cache_key_prefix + session_key) in self._cache
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/cache/backends/base.py", line 299, in __contains__
+    return self.has_key(key)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django_redis/cache.py", line 36, in _decorator
+    raise e.__cause__
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django_redis/client/default.py", line 668, in has_key
+    return client.exists(key) == 1
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/redis/commands/core.py", line 1737, in exists
+    return self.execute_command("EXISTS", *names)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/redis/client.py", line 542, in execute_command
+    conn = self.connection or pool.get_connection(command_name, **options)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/redis/connection.py", line 1109, in get_connection
+    connection.connect()
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/redis/connection.py", line 282, in connect
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+ERROR 2025-08-09 13:53:49,788 basehttp 164221 140561931564608 "POST /admin/login/?next=/admin/ HTTP/1.1" 500 212615
+INFO 2025-08-09 13:55:04,467 basehttp 164221 140561931564608 "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-08-09 13:55:04,488 basehttp 164221 140561931564608 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:55:04,546 basehttp 164221 140561931564608 "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-08-09 13:55:04,597 basehttp 164221 140561931564608 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-08-09 13:55:04,598 basehttp 164221 140562013353536 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-08-09 13:55:11,446 basehttp 164221 140561931564608 "GET /admin/analytics/analyticsalert/ HTTP/1.1" 200 24478
+INFO 2025-08-09 13:55:11,461 basehttp 164221 140561931564608 "GET /static/admin/css/changelists.css HTTP/1.1" 200 6566
+INFO 2025-08-09 13:55:11,466 basehttp 164221 140561923171904 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 8943
+INFO 2025-08-09 13:55:11,466 basehttp 164221 140561914779200 "GET /static/admin/js/core.js HTTP/1.1" 200 5682
+INFO 2025-08-09 13:55:11,466 basehttp 164221 140561906386496 "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-08-09 13:55:11,467 basehttp 164221 140561897993792 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 292458
+INFO 2025-08-09 13:55:11,472 basehttp 164221 140561906386496 "GET /static/admin/js/actions.js HTTP/1.1" 200 7872
+INFO 2025-08-09 13:55:11,473 basehttp 164221 140561923171904 "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-08-09 13:55:11,473 basehttp 164221 140561914779200 "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-08-09 13:55:11,476 basehttp 164221 140561897993792 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 232381
+INFO 2025-08-09 13:55:11,481 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:55:11,482 basehttp 164221 140562013353536 "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-08-09 13:55:11,521 basehttp 164221 140561897993792 "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-08-09 13:55:11,531 basehttp 164221 140562013353536 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-08-09 13:55:13,445 basehttp 164221 140562013353536 "GET /admin/analytics/analyticsdashboard/ HTTP/1.1" 200 24494
+INFO 2025-08-09 13:55:13,469 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:55:15,001 basehttp 164221 140562013353536 "GET /admin/analytics/analyticsmetric/ HTTP/1.1" 200 24880
+INFO 2025-08-09 13:55:15,016 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:55:16,108 basehttp 164221 140562013353536 "GET /admin/analytics/analyticsreport/ HTTP/1.1" 200 24676
+INFO 2025-08-09 13:55:16,132 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:55:17,096 basehttp 164221 140562013353536 "GET /admin/analytics/analyticswidget/ HTTP/1.1" 200 25385
+INFO 2025-08-09 13:55:17,108 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:55:18,036 basehttp 164221 140562013353536 "GET /admin/analytics/performancemetrics/ HTTP/1.1" 200 23407
+INFO 2025-08-09 13:55:18,050 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:55:19,233 basehttp 164221 140562013353536 "GET /admin/analytics/usageanalytics/ HTTP/1.1" 200 23115
+INFO 2025-08-09 13:55:19,248 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+ERROR 2025-08-09 13:55:25,376 log 164221 140562013353536 Internal Server Error: /admin/executions/executionalert/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: relation "execution_alerts" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_alerts"
+                                          ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 1926, in changelist_view
+    cl = self.get_changelist_instance(request)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 836, in get_changelist_instance
+    return ChangeList(
+           ^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 123, in __init__
+    self.get_results(request)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 279, in get_results
+    result_count = paginator.count
+                   ^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/paginator.py", line 93, in count
+    return c()
+           ^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 608, in count
+    return self.query.get_count(using=self.db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 568, in get_count
+    return obj.get_aggregation(using, {"__count": Count("*")})["__count"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 554, in get_aggregation
+    result = compiler.execute_sql(SINGLE)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: relation "execution_alerts" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_alerts"
+                                          ^
+
+ERROR 2025-08-09 13:55:25,378 basehttp 164221 140562013353536 "GET /admin/executions/executionalert/ HTTP/1.1" 500 192281
+INFO 2025-08-09 13:55:30,421 basehttp 164221 140562013353536 "GET /admin/analytics/usageanalytics/ HTTP/1.1" 200 23115
+ERROR 2025-08-09 13:55:34,133 log 164221 140562013353536 Internal Server Error: /admin/executions/executionschedule/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: relation "execution_schedules" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_schedules"
+                                          ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 1926, in changelist_view
+    cl = self.get_changelist_instance(request)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 836, in get_changelist_instance
+    return ChangeList(
+           ^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 123, in __init__
+    self.get_results(request)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 279, in get_results
+    result_count = paginator.count
+                   ^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/paginator.py", line 93, in count
+    return c()
+           ^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 608, in count
+    return self.query.get_count(using=self.db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 568, in get_count
+    return obj.get_aggregation(using, {"__count": Count("*")})["__count"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 554, in get_aggregation
+    result = compiler.execute_sql(SINGLE)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: relation "execution_schedules" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_schedules"
+                                          ^
+
+ERROR 2025-08-09 13:55:34,134 basehttp 164221 140562013353536 "GET /admin/executions/executionschedule/ HTTP/1.1" 500 192451
+INFO 2025-08-09 13:55:40,443 basehttp 164221 140562013353536 "GET /admin/analytics/usageanalytics/ HTTP/1.1" 200 23115
+ERROR 2025-08-09 13:55:45,539 log 164221 140562013353536 Internal Server Error: /admin/executions/executionalert/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: relation "execution_alerts" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_alerts"
+                                          ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 1926, in changelist_view
+    cl = self.get_changelist_instance(request)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 836, in get_changelist_instance
+    return ChangeList(
+           ^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 123, in __init__
+    self.get_results(request)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 279, in get_results
+    result_count = paginator.count
+                   ^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/paginator.py", line 93, in count
+    return c()
+           ^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 608, in count
+    return self.query.get_count(using=self.db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 568, in get_count
+    return obj.get_aggregation(using, {"__count": Count("*")})["__count"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 554, in get_aggregation
+    result = compiler.execute_sql(SINGLE)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: relation "execution_alerts" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_alerts"
+                                          ^
+
+ERROR 2025-08-09 13:55:45,540 basehttp 164221 140562013353536 "GET /admin/executions/executionalert/ HTTP/1.1" 500 192281
+INFO 2025-08-09 13:55:47,158 basehttp 164221 140562013353536 "GET /admin/analytics/usageanalytics/ HTTP/1.1" 200 23115
+ERROR 2025-08-09 13:55:48,957 log 164221 140562013353536 Internal Server Error: /admin/executions/executionhistory/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: relation "execution_history" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_history"
+                                          ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 1926, in changelist_view
+    cl = self.get_changelist_instance(request)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 836, in get_changelist_instance
+    return ChangeList(
+           ^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 123, in __init__
+    self.get_results(request)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 279, in get_results
+    result_count = paginator.count
+                   ^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/paginator.py", line 93, in count
+    return c()
+           ^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 608, in count
+    return self.query.get_count(using=self.db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 568, in get_count
+    return obj.get_aggregation(using, {"__count": Count("*")})["__count"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 554, in get_aggregation
+    result = compiler.execute_sql(SINGLE)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: relation "execution_history" does not exist
+LINE 1: SELECT COUNT(*) AS "__count" FROM "execution_history"
+                                          ^
+
+ERROR 2025-08-09 13:55:48,958 basehttp 164221 140562013353536 "GET /admin/executions/executionhistory/ HTTP/1.1" 500 192462
+INFO 2025-08-09 13:56:19,316 basehttp 164221 140562013353536 "GET /admin/executions/executionhistory/ HTTP/1.1" 200 23997
+INFO 2025-08-09 13:56:19,333 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:56:21,533 basehttp 164221 140562013353536 "GET /admin/executions/executionschedule/ HTTP/1.1" 200 23886
+INFO 2025-08-09 13:56:21,555 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:56:22,742 basehttp 164221 140562013353536 "GET /admin/executions/executionresource/ HTTP/1.1" 200 23384
+INFO 2025-08-09 13:56:22,769 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+ERROR 2025-08-09 13:56:25,774 log 164221 140562013353536 Internal Server Error: /admin/nodes/nodeexecutionlog/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py", line 330, in changelist_view
+    return super().changelist_view(request, extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 2065, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 380, in __len__
+    self._fetch_all()
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1549, in execute_sql
+    sql, params = self.as_sql()
+                  ^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 736, in as_sql
+    extra_select, order_by, group_by = self.pre_sql_setup(
+                                       ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 84, in pre_sql_setup
+    self.setup_query(with_col_aliases=with_col_aliases)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 73, in setup_query
+    self.select, self.klass_info, self.annotation_col_map = self.get_select(
+                                                            ^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 279, in get_select
+    related_klass_infos = self.get_related_selections(select, select_mask)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1367, in get_related_selections
+    raise FieldError(
+django.core.exceptions.FieldError: Invalid field name(s) given in select_related: 'workflow_execution'. Choices are: execution, node_type
+ERROR 2025-08-09 13:56:25,775 basehttp 164221 140562013353536 "GET /admin/nodes/nodeexecutionlog/ HTTP/1.1" 500 168124
+INFO 2025-08-09 13:56:32,960 basehttp 164221 140562013353536 "GET /admin/executions/executionresource/ HTTP/1.1" 200 23384
+INFO 2025-08-09 13:56:34,748 basehttp 164221 140562013353536 "GET /admin/executions/executionqueue/ HTTP/1.1" 200 25241
+INFO 2025-08-09 13:56:34,764 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:56:38,155 basehttp 164221 140562013353536 "GET /admin/nodes/customnodetype/ HTTP/1.1" 200 23999
+INFO 2025-08-09 13:56:38,167 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:56:39,153 basehttp 164221 140562013353536 "GET /admin/executions/executionschedule/ HTTP/1.1" 200 23886
+INFO 2025-08-09 13:56:39,177 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:56:48,918 basehttp 164221 140562013353536 "GET /admin/nodes/customnodetype/ HTTP/1.1" 200 23999
+INFO 2025-08-09 13:56:51,511 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:56:55,564 basehttp 164221 140562013353536 "GET /admin/nodes/customnodetype/ HTTP/1.1" 200 23999
+INFO 2025-08-09 13:56:55,585 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:56:57,491 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+ERROR 2025-08-09 13:56:59,637 log 164221 140562013353536 Internal Server Error: /admin/nodes/nodetypecategory/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 1926, in changelist_view
+    cl = self.get_changelist_instance(request)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 836, in get_changelist_instance
+    return ChangeList(
+           ^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 77, in __init__
+    self.root_queryset = model_admin.get_queryset(request)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py", line 22, in get_queryset
+    return super().get_queryset(request).annotate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 1590, in annotate
+    return self._annotate(args, kwargs, select=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 1638, in _annotate
+    clone.query.add_annotation(
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1133, in add_annotation
+    annotation = annotation.resolve_expression(self, allow_joins=True, reuse=None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/aggregates.py", line 64, in resolve_expression
+    c = super().resolve_expression(query, allow_joins, reuse, summarize)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/expressions.py", line 950, in resolve_expression
+    c.source_expressions[pos] = arg.resolve_expression(
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/expressions.py", line 829, in resolve_expression
+    return query.resolve_ref(self.name, allow_joins, reuse, summarize)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1976, in resolve_ref
+    join_info = self.setup_joins(
+                ^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1823, in setup_joins
+    path, final_field, targets, rest = self.names_to_path(
+                                       ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1724, in names_to_path
+    raise FieldError(
+django.core.exceptions.FieldError: Cannot resolve keyword 'node_types' into field. Choices are: color, created_at, description, icon, id, name, updated_at
+ERROR 2025-08-09 13:56:59,638 basehttp 164221 140562013353536 "GET /admin/nodes/nodetypecategory/ HTTP/1.1" 500 174427
+INFO 2025-08-09 13:57:05,463 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:57:10,093 basehttp 164221 140562013353536 "GET /admin/nodes/nodecredential/ HTTP/1.1" 200 24349
+INFO 2025-08-09 13:57:10,110 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:57:11,937 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+ERROR 2025-08-09 13:57:13,698 log 164221 140562013353536 Internal Server Error: /admin/nodes/nodeexecutionlog/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/work/project/agents/tm/agents/workflow_platform/apps/nodes/admin.py", line 330, in changelist_view
+    return super().changelist_view(request, extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 2065, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 380, in __len__
+    self._fetch_all()
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1549, in execute_sql
+    sql, params = self.as_sql()
+                  ^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 736, in as_sql
+    extra_select, order_by, group_by = self.pre_sql_setup(
+                                       ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 84, in pre_sql_setup
+    self.setup_query(with_col_aliases=with_col_aliases)
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 73, in setup_query
+    self.select, self.klass_info, self.annotation_col_map = self.get_select(
+                                                            ^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 279, in get_select
+    related_klass_infos = self.get_related_selections(select, select_mask)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/compiler.py", line 1367, in get_related_selections
+    raise FieldError(
+django.core.exceptions.FieldError: Invalid field name(s) given in select_related: 'workflow_execution'. Choices are: execution, node_type
+ERROR 2025-08-09 13:57:13,699 basehttp 164221 140562013353536 "GET /admin/nodes/nodeexecutionlog/ HTTP/1.1" 500 168095
+INFO 2025-08-09 13:57:19,503 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:57:22,774 basehttp 164221 140562013353536 "GET /admin/webhooks/webhookdelivery/ HTTP/1.1" 200 24598
+INFO 2025-08-09 13:57:22,793 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:57:24,786 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:57:26,295 basehttp 164221 140562013353536 "GET /admin/webhooks/webhookendpoint/ HTTP/1.1" 200 24735
+INFO 2025-08-09 13:57:26,310 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:57:27,921 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:57:29,524 basehttp 164221 140562013353536 "GET /admin/webhooks/webhookratelimit/ HTTP/1.1" 200 23652
+INFO 2025-08-09 13:57:29,539 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:57:31,325 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+ERROR 2025-08-09 13:57:33,440 log 164221 140562013353536 Internal Server Error: /admin/workflows/workflowcategory/
+Traceback (most recent call last):
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 688, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/views/decorators/cache.py", line 62, in _wrapper_view_func
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/utils/decorators.py", line 134, in _wrapper_view
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 1926, in changelist_view
+    cl = self.get_changelist_instance(request)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/options.py", line 836, in get_changelist_instance
+    return ChangeList(
+           ^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/contrib/admin/views/main.py", line 77, in __init__
+    self.root_queryset = model_admin.get_queryset(request)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/work/project/agents/tm/agents/workflow_platform/apps/workflows/admin.py", line 54, in get_queryset
+    return super().get_queryset(request).annotate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 1590, in annotate
+    return self._annotate(args, kwargs, select=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/query.py", line 1638, in _annotate
+    clone.query.add_annotation(
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1133, in add_annotation
+    annotation = annotation.resolve_expression(self, allow_joins=True, reuse=None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/aggregates.py", line 64, in resolve_expression
+    c = super().resolve_expression(query, allow_joins, reuse, summarize)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/expressions.py", line 950, in resolve_expression
+    c.source_expressions[pos] = arg.resolve_expression(
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/expressions.py", line 829, in resolve_expression
+    return query.resolve_ref(self.name, allow_joins, reuse, summarize)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1976, in resolve_ref
+    join_info = self.setup_joins(
+                ^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1823, in setup_joins
+    path, final_field, targets, rest = self.names_to_path(
+                                       ^^^^^^^^^^^^^^^^^^^
+  File "/home/asim/.pyenv/versions/wf/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1724, in names_to_path
+    raise FieldError(
+django.core.exceptions.FieldError: Cannot resolve keyword 'workflows' into field. Choices are: color, created_at, description, icon, id, name, workflow
+ERROR 2025-08-09 13:57:33,440 basehttp 164221 140562013353536 "GET /admin/workflows/workflowcategory/ HTTP/1.1" 500 174109
+INFO 2025-08-09 13:57:39,625 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:57:41,605 basehttp 164221 140562013353536 "GET /admin/workflows/workflowcomment/ HTTP/1.1" 200 23326
+INFO 2025-08-09 13:57:41,620 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:57:43,882 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:57:45,740 basehttp 164221 140562013353536 "GET /admin/workflows/workflowshare/ HTTP/1.1" 200 23750
+INFO 2025-08-09 13:57:45,760 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:57:47,509 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:59:31,136 basehttp 164221 140562013353536 "GET /admin/organizations/organizationapikey/ HTTP/1.1" 200 24579
+INFO 2025-08-09 13:59:31,156 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:59:35,502 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:59:37,621 basehttp 164221 140562013353536 "GET /admin/organizations/organizationinvitation/ HTTP/1.1" 200 25018
+INFO 2025-08-09 13:59:37,642 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:59:39,421 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:59:40,922 basehttp 164221 140562013353536 "GET /admin/organizations/organizationmember/ HTTP/1.1" 200 24269
+INFO 2025-08-09 13:59:40,939 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:59:42,836 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:59:44,430 basehttp 164221 140562013353536 "GET /admin/organizations/organizationusage/ HTTP/1.1" 200 23416
+INFO 2025-08-09 13:59:44,446 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 13:59:46,218 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267
+INFO 2025-08-09 13:59:47,834 basehttp 164221 140562013353536 "GET /admin/organizations/organization/ HTTP/1.1" 200 24168
+INFO 2025-08-09 13:59:47,847 basehttp 164221 140562013353536 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-09 14:00:01,421 basehttp 164221 140562013353536 "GET /admin/ HTTP/1.1" 200 26267

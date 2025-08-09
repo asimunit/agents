@@ -38,22 +38,23 @@ class NodeTypeCategoryAdmin(admin.ModelAdmin):
     node_count.admin_order_field = 'node_count'
 
 
-@admin.register(NodeType)
 class NodeTypeAdmin(admin.ModelAdmin):
     """Node type admin"""
 
     list_display = [
         'name', 'display_name', 'category', 'version', 'is_active',
-        'usage_count', 'is_official', 'created_at'
+        'usage_count', 'created_at'  # Removed 'is_official' - field doesn't exist
     ]
 
     list_filter = [
-        'category', 'is_active', 'is_official', 'created_at'
+        'category', 'is_active', 'created_at'  # Removed 'is_official'
     ]
 
     search_fields = ['name', 'display_name', 'description']
 
     readonly_fields = ['created_at', 'updated_at', 'usage_statistics']
+
+
 
     fieldsets = (
         ('Basic Information', {
@@ -81,6 +82,18 @@ class NodeTypeAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+
+    # Add usage_count method since field doesn't exist
+    def usage_count(self, obj):
+        """Display usage count"""
+        try:
+            from apps.nodes.models import NodeExecutionLog
+            count = NodeExecutionLog.objects.filter(node_type=obj).count()
+            return count
+        except Exception:
+            return 0
+
+    usage_count.short_description = 'Usage Count'
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('category')
@@ -236,7 +249,7 @@ class NodeExecutionLogAdmin(admin.ModelAdmin):
     """Node execution log admin"""
 
     list_display = [
-        'node_id', 'node_type', 'workflow_execution', 'status',
+        'node_id', 'node_type', 'execution', 'status',  # Changed from 'workflow_execution' to 'execution'
         'execution_time_display', 'started_at'
     ]
 
@@ -245,17 +258,26 @@ class NodeExecutionLogAdmin(admin.ModelAdmin):
     ]
 
     search_fields = [
-        'node_id', 'node_type', 'workflow_execution__execution_id'
+        'node_id', 'node_type', 'execution__id'  # Changed from 'workflow_execution__execution_id'
     ]
 
     readonly_fields = [
         'started_at', 'completed_at', 'execution_time', 'retry_count'
     ]
 
+    def execution_time_display(self, obj):
+        """Display execution time in readable format"""
+        if obj.execution_time:
+            return f"{obj.execution_time:.2f}ms"
+        return "N/A"
+
+    execution_time_display.short_description = 'Execution Time'
+
     fieldsets = (
         ('Execution Information', {
             'fields': (
-                'workflow_execution', 'node_id', 'node_type', 'status'
+                'execution', 'node_id', 'node_type',  # Changed from 'workflow_execution'
+                'node_name', 'status'
             )
         }),
         ('Timing', {

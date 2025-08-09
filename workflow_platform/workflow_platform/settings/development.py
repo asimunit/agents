@@ -15,6 +15,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '*']
 
 # Database for development
+# Database for development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -23,12 +24,10 @@ DATABASES = {
         'PASSWORD': env('DB_PASSWORD', default='postgres'),
         'HOST': env('DB_HOST', default='localhost'),
         'PORT': env('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'MAX_CONNS': 5,
-        }
+        'CONN_MAX_AGE': 60,  # Shorter connection reuse for development
+        # Remove the OPTIONS with MAX_CONNS
     }
 }
-
 # Development-specific middleware
 MIDDLEWARE = [
                  'corsheaders.middleware.CorsMiddleware',

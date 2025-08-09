@@ -172,42 +172,38 @@ class WorkflowExecutionAdmin(admin.ModelAdmin):
     """Workflow execution admin"""
 
     list_display = [
-        'workflow', 'status', 'started_at', 'execution_time_display',
-        'triggered_by', 'trigger_type'
+        'id', 'workflow', 'status', 'trigger_source',  # Changed from 'trigger_type'
+        'started_at', 'completed_at', 'triggered_by'
     ]
 
-    list_filter = [
-        'status', 'trigger_type', 'started_at', 'workflow__organization'
-    ]
+    list_filter = ['status', 'trigger_source', 'started_at']  # Changed from 'trigger_type'
 
-    search_fields = [
-        'workflow__name', 'triggered_by__username', 'execution_id'
-    ]
+    search_fields = ['workflow__name', 'triggered_by__username']
 
-    readonly_fields = [
-        'execution_id', 'started_at', 'completed_at', 'execution_time',
-        'node_executions_count'
-    ]
+    readonly_fields = ['started_at', 'completed_at', 'execution_time']  # Removed non-existent field
 
     fieldsets = (
         ('Execution Information', {
-            'fields': (
-                'workflow', 'execution_id', 'status', 'trigger_type',
-                'triggered_by', 'trigger_data'
-            )
+            'fields': ('workflow', 'status', 'trigger_source', 'triggered_by')
         }),
         ('Timing', {
             'fields': ('started_at', 'completed_at', 'execution_time')
         }),
-        ('Results', {
-            'fields': ('result_data', 'error_message', 'error_details'),
+        ('Data', {
+            'fields': ('input_data', 'output_data'),
             'classes': ('collapse',)
         }),
-        ('Context', {
-            'fields': ('context_data', 'variables', 'node_executions_count'),
+        ('Error Information', {
+            'fields': ('error_message', 'error_details'),
             'classes': ('collapse',)
         })
     )
+
+    def trigger_type(self, obj):
+        """Display trigger type"""
+        return obj.trigger_source
+
+    trigger_type.short_description = 'Trigger Type'
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
@@ -241,34 +237,55 @@ class WorkflowTemplateAdmin(admin.ModelAdmin):
     """Workflow template admin"""
 
     list_display = [
-        'name', 'category', 'use_count', 'rating_display',
-        'created_by', 'is_official', 'created_at'
+        'title', 'workflow', 'difficulty', 'industry',  # Changed from 'name', 'category', 'use_count', 'created_by'
+        'usage_count', 'is_featured', 'published_at'
     ]
 
-    list_filter = ['category', 'is_official', 'created_at']
+    list_filter = ['difficulty', 'industry', 'is_featured', 'is_official']  # Changed from 'category'
 
-    search_fields = ['name', 'description', 'created_by__username']
+    search_fields = ['title', 'short_description', 'industry']
 
-    readonly_fields = ['use_count', 'created_at', 'updated_at']
+    readonly_fields = ['usage_count', 'rating', 'rating_count', 'created_at', 'updated_at']
 
     fieldsets = (
-        ('Template Information', {
-            'fields': (
-                'name', 'description', 'category', 'tags', 'preview_image'
-            )
+        ('Basic Information', {
+            'fields': ('workflow', 'title', 'short_description', 'long_description')
         }),
-        ('Template Definition', {
-            'fields': ('workflow_data', 'default_variables'),
+        ('Categorization', {
+            'fields': ('difficulty', 'industry', 'use_case')
+        }),
+        ('Media', {
+            'fields': ('thumbnail', 'screenshots')
+        }),
+        ('Statistics', {
+            'fields': ('usage_count', 'rating', 'rating_count'),
             'classes': ('collapse',)
         }),
-        ('Metadata', {
-            'fields': (
-                'is_official', 'use_count', 'rating', 'created_by',
-                'created_at', 'updated_at'
-            ),
-            'classes': ('collapse',)
+        ('Publishing', {
+            'fields': ('is_featured', 'is_official', 'published_at')
+        }),
+        ('Requirements', {
+            'fields': ('required_integrations', 'required_plan')
         })
     )
+
+    def name(self, obj):
+        """Template name"""
+        return obj.title
+
+    name.short_description = 'Name'
+
+    def category(self, obj):
+        """Template category"""
+        return obj.industry
+
+    category.short_description = 'Category'
+
+    def created_by(self, obj):
+        """Template creator"""
+        return obj.workflow.created_by if obj.workflow else None
+
+    created_by.short_description = 'Created By'
 
     def rating_display(self, obj):
         """Display rating with stars"""

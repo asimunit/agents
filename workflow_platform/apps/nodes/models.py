@@ -358,7 +358,7 @@ class NodeExecutionLog(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    execution = models.ForeignKey('executions.WorkflowExecution', on_delete=models.CASCADE, related_name='node_logs')
+    execution = models.ForeignKey('workflows.WorkflowExecution', on_delete=models.CASCADE, related_name='node_logs')
 
     # Node Information
     node_id = models.CharField(max_length=255)  # Node ID from workflow

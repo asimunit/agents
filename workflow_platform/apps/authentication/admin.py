@@ -12,6 +12,7 @@ from apps.organizations.models import OrganizationMember, OrganizationInvitation
 class OrganizationMemberInline(admin.TabularInline):
     """Inline for organization memberships"""
     model = OrganizationMember
+    fk_name = 'user'  # Specify which foreign key to use (user vs invited_by)
     extra = 0
     fields = ['organization', 'role', 'status', 'joined_at']
     readonly_fields = ['joined_at']
@@ -28,7 +29,6 @@ class CustomUserAdmin(BaseUserAdmin):
     ]
 
     list_filter = tuple(BaseUserAdmin.list_filter) + ('organization_memberships__role',)
-
 
     search_fields = ['username', 'email', 'first_name', 'last_name']
 

@@ -91,6 +91,7 @@ WSGI_APPLICATION = 'workflow_platform.wsgi.application'
 ASGI_APPLICATION = 'workflow_platform.asgi.application'
 
 # Database
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -99,9 +100,8 @@ DATABASES = {
         'PASSWORD': env('DB_PASSWORD', default='postgres'),
         'HOST': env('DB_HOST', default='localhost'),
         'PORT': env('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'MAX_CONNS': 20,
-        }
+        'CONN_MAX_AGE': 600,  # Connection pooling at Django level
+        # Remove the OPTIONS with MAX_CONNS
     }
 }
 

@@ -38,14 +38,14 @@ DATABASES = {
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT', default='5432'),
         'OPTIONS': {
-            'MAX_CONNS': env.int('DATABASE_POOL_SIZE', default=20),
-            'sslmode': 'require',
+            'sslmode': 'require',  # Keep this valid option
+            # Remove MAX_CONNS
         },
-        'CONN_MAX_AGE': 600,
+        'CONN_MAX_AGE': 600,  # Django-level connection pooling
     }
 }
 
-# Read replica (optional)
+# Read replica (optional) - also fix if present
 if env('DB_READ_HOST', default=None):
     DATABASES['read'] = {
         'ENGINE': 'django.db.backends.postgresql',
@@ -55,8 +55,8 @@ if env('DB_READ_HOST', default=None):
         'HOST': env('DB_READ_HOST'),
         'PORT': env('DB_READ_PORT', default='5432'),
         'OPTIONS': {
-            'MAX_CONNS': env.int('DATABASE_POOL_SIZE', default=20),
             'sslmode': 'require',
+            # Remove MAX_CONNS
         },
         'CONN_MAX_AGE': 600,
     }

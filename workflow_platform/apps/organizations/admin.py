@@ -14,6 +14,7 @@ from .models import (
 class OrganizationMemberInline(admin.TabularInline):
     """Inline for organization members"""
     model = OrganizationMember
+    fk_name = 'organization'  # Add this line to specify which FK to use
     extra = 0
     fields = ['user', 'role', 'status', 'joined_at']
     readonly_fields = ['joined_at']
@@ -151,15 +152,15 @@ class OrganizationAPIKeyAdmin(admin.ModelAdmin):
     """Organization API key admin"""
 
     list_display = [
-        'name', 'organization', 'is_active', 'usage_count',
-        'last_used_at', 'expires_at', 'created_by'
+        'name', 'organization', 'is_active', 'created_at',  # Removed 'usage_count'
+        'expires_at', 'last_used_at'
     ]
 
     list_filter = ['is_active', 'created_at', 'expires_at']
 
-    search_fields = ['name', 'organization__name', 'created_by__username']
+    search_fields = ['name', 'organization__name']
 
-    readonly_fields = ['key', 'usage_count', 'last_used_at', 'created_at']
+    readonly_fields = ['created_at', 'last_used_at', 'key_preview']
 
     fieldsets = (
         ('API Key Information', {
@@ -182,6 +183,26 @@ class OrganizationAPIKeyAdmin(admin.ModelAdmin):
         })
     )
 
+    def usage_count(self, obj):
+        """Display usage count"""
+        # This would need to be calculated from API usage logs
+        return "N/A"  # Placeholder
+
+    usage_count.short_description = 'Usage Count'
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'organization', 'is_active')
+        }),
+        ('Access Control', {
+            'fields': ('scopes', 'expires_at')
+        }),
+        ('Security', {
+            'fields': ('key_preview', 'last_used_at', 'created_by', 'created_at'),
+            'classes': ('collapse',)
+        })
+    )
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
             'organization', 'created_by'
@@ -190,37 +211,54 @@ class OrganizationAPIKeyAdmin(admin.ModelAdmin):
 
 @admin.register(OrganizationUsage)
 class OrganizationUsageAdmin(admin.ModelAdmin):
-    """Organization usage tracking admin"""
+    """Organization usage admin"""
 
     list_display = [
-        'organization', 'date', 'workflow_count', 'execution_count',
-        'user_count', 'api_calls_count'
+        'organization', 'period_start', 'workflow_executions',  # Changed field names to match model
+        'api_calls', 'storage_used_mb', 'total_cost'
     ]
 
-    list_filter = ['date', 'organization__plan']
+    list_filter = ['period_start', 'organization']  # Changed from 'date' to 'period_start'
 
     search_fields = ['organization__name']
 
     readonly_fields = ['created_at']
 
-    date_hierarchy = 'date'
+    date_hierarchy = 'period_start'  # Changed from 'date' to 'period_start'
 
     fieldsets = (
-        ('Usage Statistics', {
-            'fields': (
-                'organization', 'date', 'workflow_count', 'execution_count',
-                'user_count', 'api_calls_count', 'storage_used_mb'
-            )
+        ('Organization', {
+            'fields': ('organization',)
         }),
-        ('Breakdown', {
-            'fields': ('usage_breakdown',),
-            'classes': ('collapse',)
+        ('Usage Period', {
+            'fields': ('period_start', 'period_end')
+        }),
+        ('Usage Metrics', {
+            'fields': ('workflow_executions', 'api_calls', 'storage_used_mb', 'bandwidth_used_mb')
+        }),
+        ('Billing', {
+            'fields': ('total_cost',)
         }),
         ('Metadata', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
+            'fields': ('created_at',)
         })
     )
+
+    # Add display methods for the removed fields if needed
+    def workflow_count(self, obj):
+        """Display workflow count"""
+        return obj.workflow_executions
+    workflow_count.short_description = 'Workflows'
+
+    def execution_count(self, obj):
+        """Display execution count"""
+        return obj.workflow_executions
+    execution_count.short_description = 'Executions'
+
+    def api_calls_count(self, obj):
+        """Display API calls count"""
+        return obj.api_calls
+    api_calls_count.short_description = 'API Calls'
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('organization')
